@@ -1,7 +1,7 @@
 name: CI/CD
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "cicd-code-update"]
   workflow_dispatch:
 env:
   WEBAPP_NAME: tcc-convenio-backend
