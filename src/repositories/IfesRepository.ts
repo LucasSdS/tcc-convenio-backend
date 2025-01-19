@@ -1,16 +1,19 @@
 import Ifes from "../models/Ifes";
 import IfesDTO from "../dto/Ifes";
+import sequelize from "../../database/postgresqlConfig";
 
-export class IfesRepository {
+export default class IfesRepository {
     static async getAllIfes(): Promise<IfesDTO[]> {
         console.log(`Buscando todas as Ifes da tabela`);
-
         try {
-            await Ifes.sync();
             const allIfesQuery = await Ifes.findAll();
-            return allIfesQuery.map(({ dataValues }) => {
-                return new IfesDTO(dataValues.code, dataValues.acronym, dataValues.name);
-            });
+            if (allIfesQuery) {
+                return allIfesQuery.map(({ dataValues }) => {
+                    return new IfesDTO(dataValues.code, dataValues.acronym, dataValues.name);
+                });
+            } else {
+                return [];
+            }
 
         } catch (error: any) {
             console.log("Ocorreu um erro ao buscar todas Ifes");
@@ -21,9 +24,7 @@ export class IfesRepository {
 
     static async getIfesByCode(ifesCode: string): Promise<IfesDTO> {
         console.log(`Buscando Ifes com código: ${ifesCode}`);
-
         try {
-            await Ifes.sync();
             let findIfesEntity = await Ifes.findOne({
                 where: {
                     code: ifesCode
@@ -46,9 +47,7 @@ export class IfesRepository {
     }
 
     static async updateIfes(ifes: IfesDTO): Promise<void> {
-
         try {
-            await Ifes.sync();
             let findIfes = await Ifes.findOne({
                 where: {
                     acronym: ifes.acronym,
@@ -67,6 +66,18 @@ export class IfesRepository {
             console.log("Ocorreu um erro ao atualizar Ifes", ifes.name);
             console.error(error.name, error.message);
             throw error;
+        }
+    }
+
+
+    static async bulkCreateIfes(ifesList: IfesDTO[]): Promise<void> {
+        const transaction = await sequelize.transaction();
+        try {
+            await Ifes.bulkCreate(ifesList, { transaction: transaction });
+            await transaction.commit();
+        } catch (error: any) {
+            await transaction.rollback();
+            console.log(error.name, error.message);
         }
     }
 

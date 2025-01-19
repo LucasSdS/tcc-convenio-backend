@@ -5,6 +5,8 @@ import IfesRouter from "./routes/IfesRouter";
 import sequelize from "../database/postgresqlConfig";
 import { enableCors } from "./routes/middlewares/cors";
 import ConvenioRouter from "./routes/ConvenioRouter";
+import createAssociationsModels from "./models/associations";
+import IfesController from "./modules/api/controller/IfesController";
 
 let app = express();
 
@@ -30,6 +32,9 @@ app.listen(PORT, HOSTNAME, async (error?: Error) => {
     if (!error) {
         try {
             await sequelize.authenticate();
+            createAssociationsModels();
+            await sequelize.sync({ alter: true });
+            await IfesController.createIfesByIfesJsonList();
             console.log('Conexão com banco de dados realizada com sucesso.');
             console.log(`Servidor online no endereço: http://${HOSTNAME}:${PORT}`);
 
