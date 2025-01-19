@@ -3,6 +3,9 @@ on:
   push:
     branches: ["main", "cicd-code-update"]
   workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
 env:
   WEBAPP_NAME: tcc-convenio-backend
   NODE_VERSION: "18.x"
