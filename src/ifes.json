@@ -4,6 +4,341 @@
       "code": "26269",
       "acronym": "UNIRIO",
       "name": "Universidade Federal do Estado do Rio de Janeiro"
+    },
+    {
+      "code": "26352",
+      "acronym": "UFABC",
+      "name": "Fundação Universidade Federal do ABC"
+    },
+    {
+      "code": "26275",
+      "acronym": "FUFAC",
+      "name": "Fundação Universidade Federal do Acre"
+    },
+    {
+      "code": "26231",
+      "acronym": "UFAL",
+      "name": "Universidade Federal de Alagoas"
+    },
+    {
+      "code": "26270",
+      "acronym": "FUAM",
+      "name": "Fundação Universidade do Amazonas"
+    },
+    {
+      "code": "26456",
+      "acronym": "UFAPE",
+      "name": "Universidade Federal do Agreste de Pernambuco"
+    },
+    {
+      "code": "26232",
+      "acronym": "UFBA",
+      "name": "Universidade Federal da Bahia"
+    },
+    {
+      "code": "26233",
+      "acronym": "UFCE",
+      "name": "Universidade Federal do Ceará"
+    },
+    {
+      "code": "26449",
+      "acronym": "UFCA",
+      "name": "Universidade Federal do Cariri"
+    },
+    {
+      "code": "26452",
+      "acronym": "UFCAT",
+      "name": "Universidade Federal de Catalão"
+    },
+    {
+      "code": "26252",
+      "acronym": "UFCG",
+      "name": "Universidade Federal de Campina Grande"
+    },
+    {
+      "code": "26284",
+      "acronym": "UFCSPA",
+      "name": "Fundação Universidade Federal de Ciências da Saúde de Porto Alegre"
+    },
+    {
+      "code": "26455",
+      "acronym": "UFDPar",
+      "name": "Universidade Federal do Delta do Parnaíba"
+    },
+    {
+      "code": "26264",
+      "acronym": "UFERSA",
+      "name": "Universidade Federal Rural do Semi-Árido"
+    },
+    {
+      "code": "26234",
+      "acronym": "UFES",
+      "name": "Universidade Federal do Espírito Santo"
+    },
+    {
+      "code": "26236",
+      "acronym": "UFF",
+      "name": "Universidade Federal Fluminense"
+    },
+    {
+      "code": "26440",
+      "acronym": "UFFS",
+      "name": "Universidade Federal da Fronteira Sul"
+    },
+    {
+      "code": "26235",
+      "acronym": "UFG",
+      "name": "Universidade Federal de Goiás"
+    },
+    {
+      "code": "26350",
+      "acronym": "UFGD",
+      "name": "Fundação Universidade Federal da Grande Dourados"
+    },
+    {
+      "code": "26453",
+      "acronym": "UFJ",
+      "name": "Universidade Federal de Jataí"
+    },
+    {
+      "code": "26237",
+      "acronym": "UFJF",
+      "name": "Universidade Federal de Juiz de Fora"
+    },
+    {
+      "code": "26263",
+      "acronym": "UFLA",
+      "name": "Universidade Federal de Lavras"
+    },
+    {
+      "code": "26272",
+      "acronym": "FUMA",
+      "name": "Fundação Universidade do Maranhão"
+    },
+    {
+      "code": "26238",
+      "acronym": "UFMG",
+      "name": "Universidade Federal de Minas Gerais"
+    },
+    {
+      "code": "26283",
+      "acronym": "FUFMS",
+      "name": "Fundação Universidade Federal do Mato Grosso do Sul"
+    },
+    {
+      "code": "26276",
+      "acronym": "FUFMT",
+      "name": "Fundação Universidade Federal do Mato Grosso"
+    },
+    {
+      "code": "26457",
+      "acronym": "UFNT",
+      "name": "Universidade Federal do Norte do Tocantins"
+    },
+    {
+      "code": "26447",
+      "acronym": "UFOB",
+      "name": "Universidade Federal do Oeste da Bahia"
+    },
+    {
+      "code": "26277",
+      "acronym": "UFOP",
+      "name": "Universidade Federal de Ouro Preto"
+    },
+    {
+      "code": "26441",
+      "acronym": "UFOPA",
+      "name": "Universidade Federal do Oeste do Pará"
+    },
+    {
+      "code": "26239",
+      "acronym": "UFPA",
+      "name": "Universidade Federal do Pará"
+    },
+    {
+      "code": "26240",
+      "acronym": "UFPB",
+      "name": "Universidade Federal da Paraíba"
+    },
+    {
+      "code": "26242",
+      "acronym": "UFPE",
+      "name": "Universidade Federal de Pernambuco"
+    },
+    {
+      "code": "26278",
+      "acronym": "UFPel",
+      "name": "Fundação Universidade Federal de Pelotas"
+    },
+    {
+      "code": "26279",
+      "acronym": "FUFPI",
+      "name": "Fundação Universidade Federal do Piauí"
+    },
+    {
+      "code": "26241",
+      "acronym": "UFPR",
+      "name": "Universidade Federal do Paraná"
+    },
+    {
+      "code": "26454",
+      "acronym": "UFR",
+      "name": "Universidade Federal de Rondonópolis"
+    },
+    {
+      "code": "26253",
+      "acronym": "UFRA",
+      "name": "Universidade Federal Rural da Amazônia"
+    },
+    {
+      "code": "26351",
+      "acronym": "UFRB",
+      "name": "Universidade Federal do Recôncavo da Bahia"
+    },
+    {
+      "code": "26244",
+      "acronym": "UFRGS",
+      "name": "Universidade Federal do Rio Grande do Sul"
+    },
+    {
+      "code": "26245",
+      "acronym": "UFRJ",
+      "name": "Universidade Federal do Rio de Janeiro"
+    },
+    {
+      "code": "26243",
+      "acronym": "UFRN",
+      "name": "Universidade Federal do Rio Grande do Norte"
+    },
+    {
+      "code": "26248",
+      "acronym": "UFRPE",
+      "name": "Universidade Federal Rural de Pernambuco"
+    },
+    {
+      "code": "26250",
+      "acronym": "UFRR",
+      "name": "Universidade Federal de Roraima"
+    },
+    {
+      "code": "26249",
+      "acronym": "UFRRJ",
+      "name": "Universidade Federal Rural do Rio de Janeiro"
+    },
+    {
+      "code": "26281",
+      "acronym": "FUFS",
+      "name": "Fundação Universidade Federal de Sergipe"
+    },
+    {
+      "code": "26450",
+      "acronym": "UFSB",
+      "name": "Universidade Federal do Sul da Bahia"
+    },
+    {
+      "code": "26246",
+      "acronym": "UFSC",
+      "name": "Universidade Federal de Santa Catarina"
+    },
+    {
+      "code": "26280",
+      "acronym": "FUFSCar",
+      "name": "Fundação Universidade Federal de São Carlos"
+    },
+    {
+      "code": "26285",
+      "acronym": "UFSJ",
+      "name": "Fundação Universidade Federal de São João Del-Rei"
+    },
+    {
+      "code": "26247",
+      "acronym": "UFSM",
+      "name": "Universidade Federal de Santa Maria"
+    },
+    {
+      "code": "26251",
+      "acronym": "UFT",
+      "name": "Fundação Universidade Federal do Tocantins"
+    },
+    {
+      "code": "26254",
+      "acronym": "UFTM",
+      "name": "Universidade Federal do Triângulo Mineiro"
+    },
+    {
+      "code": "26274",
+      "acronym": "FUFU",
+      "name": "Fundação Universidade Federal de Uberlândia"
+    },
+    {
+      "code": "26282",
+      "acronym": "UFV",
+      "name": "Universidade Federal de Viçosa"
+    },
+    {
+      "code": "26255",
+      "acronym": "UFVJM",
+      "name": "Universidade Federal dos Vales do Jequitinhonha e Mucuri"
+    },
+    {
+      "code": "26271",
+      "acronym": "FUB",
+      "name": "Fundação Universidade de Brasília"
+    },
+    {
+      "code": "26260",
+      "acronym": "UNIFAL",
+      "name": "Universidade Federal de Alfenas"
+    },
+    {
+      "code": "26286",
+      "acronym": "FUFAP",
+      "name": "Fundação Universidade Federal do Amapá"
+    },
+    {
+      "code": "26261",
+      "acronym": "UNIFEI",
+      "name": "Universidade Federal de Itajubá"
+    },
+    {
+      "code": "26262",
+      "acronym": "UNIFESP",
+      "name": "Universidade Federal de São Paulo"
+    },
+    {
+      "code": "26448",
+      "acronym": "UNIFESSPA",
+      "name": "Universidade Federal do Sul e Sudeste do Pará"
+    },
+    {
+      "code": "26267",
+      "acronym": "UNILA",
+      "name": "Universidade Federal da Integração Latino-Americana"
+    },
+    {
+      "code": "26442",
+      "acronym": "UNILAB",
+      "name": "Universidade da Integração Internacional da Lusofonia Afro-Brasileira"
+    },
+    {
+      "code": "26266",
+      "acronym": "UNIPAMPA",
+      "name": "Fundação Universidade Federal do Pampa"
+    },
+    {
+      "code": "26268",
+      "acronym": "FUFRO",
+      "name": "Fundação Universidade Federal de Rondônia"
+    },
+    {
+      "code": "26230",
+      "acronym": "UNIVASF",
+      "name": "Fundação Universidade Federal do Vale do São Francisco"
+    },
+    {
+      "code": "26258",
+      "acronym": "UTFPR",
+      "name": "Universidade Tecnológica Federal do Paraná"
     }
   ]
 }

@@ -1,9 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import { ConveniosRepository } from "../../../services/ConvenioService";
+import ConveniosRepository from "../../../repositories/ConveniosRepository";
 
 export default class ConvenioController {
     static async getConvenioByNumber(req: Request, res: Response, next: NextFunction) {
-        console.log("getAllifes called");
         const { conveniosNumber } = req.params;
 
         try {
@@ -25,16 +24,9 @@ export default class ConvenioController {
     }
 
     static async getAllConvenios(req: Request, res: Response, next: NextFunction) {
-        console.log("getAll Convenios foi executado");
-        console.log("req.body", req.body);
-        console.log("req.params", req.params);
-        console.log("req.query", req.query);
-
         try {
             const convenios = await ConveniosRepository.getAll();
-            res.status(200).json({
-                allConvenios: convenios
-            });
+            res.status(200).json(convenios);
         } catch (error: any) {
             console.error(error.name, error.message);
             res.status(500).json({

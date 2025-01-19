@@ -1,7 +1,16 @@
 import { NextFunction, Request, Response } from "express";
-import { IfesRepository } from "../../../services/IfesService";
+import IfesRepository from "../../../repositories/IfesRepository";
+import IfesService from "../service/IfesService";
 
 export default class IfesController {
+    static async createIfesByIfesJsonList() {
+        try {
+            await IfesService.createIfesOnDatabase();
+        } catch (error: any) {
+            console.log(error.name, error.message);
+        }
+    }
+
     static async getAllIfes(req: Request, res: Response, next: NextFunction) {
         console.log("getAllifes called");
 
@@ -45,5 +54,24 @@ export default class IfesController {
                 message: error.message
             });
         }
+    }
+
+    static async compareIfesConvenios(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const ifesSelected = req.body.ifesSelected;
+            const { dataInicio, dataFim } = req.query as { dataInicio: string, dataFim: string };
+            const comparacaoIfesConveniosResponse = await IfesService.compareIfesConvenios(ifesSelected, dataInicio, dataFim);
+
+            res.status(200).json({
+                comparacaoIfesConveniosResponse
+            });
+
+        } catch (error: any) {
+            console.log(error.name, error.message);
+            res.status(500).json({
+                message: error.message
+            });
+        }
+
     }
 }
