@@ -7,7 +7,7 @@ permissions:
   id-token: write
   contents: read
 env:
-  WEBAPP_NAME: tcc-convenio
+  WEBAPP_NAME: "tcc-convenio-backend"
   NODE_VERSION: "18.x"
 jobs:
   CI:
