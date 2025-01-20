@@ -1,11 +1,9 @@
 import { Transaction } from "sequelize";
 import sequelize from "../../../../database/postgresqlConfig";
 import ConvenioDTO from "../../../dto/Convenio";
-import ChangeLogDTO from "../../../dto/ChangeLog";
 import ConvenenteRepository from "../../../repositories/ConvenenteRepository";
 import ConveniosRepository from "../../../repositories/ConveniosRepository";
 import IfesRepository from "../../../repositories/IfesRepository";
-import ChangeLogRepository from "../../../repositories/ChangeLogRepository";
 import PortalAPI from "./ClientPortalAPI";
 import ConvenenteService from "./ConvenenteService";
 
