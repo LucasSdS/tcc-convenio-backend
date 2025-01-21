@@ -25,6 +25,6 @@ RUN npm ci --only=production
 
 COPY --from=build /app/dist ./dist
 
-EXPOSE 8080
+EXPOSE 80
 
 CMD ["node", "dist/src/index.js"]
