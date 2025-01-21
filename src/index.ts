@@ -11,7 +11,7 @@ import IfesController from "./modules/api/controller/IfesController";
 let app = express();
 
 // Propriedades Servidor
-const PORT: number = parseInt(process.env.PORT || '8080');
+const PORT: number = parseInt(process.env.PORT || '3001');
 const HOSTNAME: string = process.env.HOST || 'localhost';
 
 // Configuração servidor
