@@ -6,7 +6,7 @@ import { Op, Transaction } from "sequelize";
 import ConvenioHistoryRepository from "./ConvenioHistoryRepository";
 import ChangeLogDTO from "../dto/ChangeLog";
 import Ifes from "../models/Ifes";
-// import ChangeLogRepository from "./ChangeLogRepository";
+import ChangeLogRepository from "./ChangeLogRepository";
 
 export default class ConveniosRepository {
 
@@ -75,7 +75,7 @@ export default class ConveniosRepository {
                 if (!ConvenioDTO.isConvenioEqual(convenioToCreateOrUpdate, convenioDTO)) {
                     const convenioDiff = ConvenioDTO.getConvenioDiff(convenioToCreateOrUpdate, convenioDTO)
                     const changeLogDTO = ChangeLogDTO.generateChangeLogDTOByDiff(convenioToCreateOrUpdate, convenioDTO, convenioDiff as Array<keyof typeof convenioDTO>)
-                    // ChangeLogRepository.createLogEntry(changeLogDTO)
+                    ChangeLogRepository.createLogEntry(changeLogDTO)
                     await ConvenioHistoryRepository.saveConvenioHistory(
                         convenioPersistido.id,
                         {
