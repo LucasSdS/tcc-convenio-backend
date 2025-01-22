@@ -38,8 +38,8 @@ services:
     image: mongodb/mongodb-community-server:5.0-ubuntu2004
     container_name: tcc-mongodb
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${POSTGRES_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${POSTGRES_PASSWORD}
+      MONGODB_INITDB_ROOT_USERNAME: ${POSTGRES_USER}
+      MONGODB_INITDB_ROOT_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "27017:27017"
     volumes:

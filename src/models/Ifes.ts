@@ -2,32 +2,35 @@ import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequ
 import sequelize from "../../database/postgresqlConfig";
 import Convenio from "./Convenio";
 
-class Ifes extends Model<InferAttributes<Ifes>, InferCreationAttributes<Convenio>> {
-    id?: number;
-    code: string;
-    acronym: string;
-    name: string;
-};
+class Ifes extends Model<InferAttributes<Ifes>, InferCreationAttributes<Ifes>> {
+    declare id?: number;
+    declare code: string;
+    declare acronym: string;
+    declare name: string;
+
+    declare convenios?: Convenio[]
+}
 
 Ifes.init(
     {
         id: {
             type: DataTypes.SMALLINT,
             primaryKey: true,
-            field: 'id',
+            autoIncrement: true,
             allowNull: false
         },
         code: {
             type: DataTypes.STRING,
-            field: 'code'
+            allowNull: false,
+            unique: true,
         },
         acronym: {
             type: DataTypes.STRING,
-            field: 'acronym'
+            allowNull: false
         },
         name: {
             type: DataTypes.STRING,
-            field: 'name'
+            allowNull: false
         }
     },
     {

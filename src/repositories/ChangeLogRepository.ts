@@ -1,7 +1,7 @@
 import ChangeLog from "../models/ChangeLog";
 import ChangeLogDTO from "../dto/ChangeLog";
 
-export class ChangeLogRepository {
+export default class ChangeLogRepository {
     static async createLogEntry(log: ChangeLogDTO): Promise<void> {
         try {
             const newLog = new ChangeLog(log)

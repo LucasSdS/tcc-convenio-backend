@@ -2,15 +2,13 @@ import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequ
 import sequelize from "../../database/postgresqlConfig";
 import Convenio from "./Convenio";
 
-class Convenente extends Model<InferAttributes<Convenente>, InferCreationAttributes<Convenio>> {
-    id?: number;
-    cpfFormatado: string;
-    cnpjFormatado: string;
-    numeroInscricaoSocial: string;
-    nome: string;
-    razaoSocialReceita: string;
-    nomeFantasiaReceita: string;
-    tipo: string;
+class Convenente extends Model<InferAttributes<Convenente>, InferCreationAttributes<Convenente>> {
+    declare id?: number;
+    declare name: string;
+    declare type: string;
+    declare detailUrl: string;
+
+    declare convenios?: Convenio[];
 };
 
 Convenente.init(
@@ -19,41 +17,30 @@ Convenente.init(
             type: DataTypes.SMALLINT,
             primaryKey: true,
             field: 'id',
+            allowNull: false,
+            autoIncrement: true,
+            unique: true
+        },
+        name: {
+            type: DataTypes.STRING,
+            field: 'name',
             allowNull: false
         },
-        cpfFormatado: {
+        type: {
             type: DataTypes.STRING,
-            field: 'cpfFormatado'
-        }, 
-        cnpjFormatado: {
+            field: 'type',
+            allowNull: false
+        },
+        detailUrl: {
             type: DataTypes.STRING,
-            field: 'cnpjFormatado'
-        }, 
-        numeroInscricaoSocial: {
-            type: DataTypes.STRING,
-            field: 'numeroInscricaoSocial'
-        }, 
-        nome: {
-            type: DataTypes.STRING,
-            field: 'nome'
-        }, 
-        razaoSocialReceita: {
-            type: DataTypes.STRING,
-            field: 'razaoSocialReceita'
-        }, 
-        nomeFantasiaReceita: {
-            type: DataTypes.STRING,
-            field: 'nomeFantasiaReceita'
-        }, 
-        tipo: {
-            type: DataTypes.STRING,
-            field: 'tipo'
-        }
+            field: 'detailUrl',
+            allowNull: false
+        },
     },
     {
         sequelize,
-        modelName: 'Convenente',
-        tableName: 'convenente',
+        modelName: 'Convenentes',
+        tableName: 'Convenentes',
         timestamps: false
     }
 );
