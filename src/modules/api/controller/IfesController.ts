@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import IfesRepository from "../../../repositories/IfesRepository";
-import IfesService from "../service/IfesService";
+import IfesService from "../services/IfesService";
 
 export default class IfesController {
     static async createIfesByIfesJsonList() {

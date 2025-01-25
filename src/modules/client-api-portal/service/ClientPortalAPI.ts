@@ -1,8 +1,6 @@
 import axios from "axios";
 import ConvenioDTO from "../../../dto/Convenio";
-import ConveniosRepository from "../../../repositories/ConveniosRepository";
 import ConvenenteDTO from "../../../dto/Convenente";
-import IfesRepository from "../../../repositories/IfesRepository";
 
 export default class PortalAPI {
     static async call(ifesCode: string, year: string, page: number): Promise<ConvenioDTO[]> {

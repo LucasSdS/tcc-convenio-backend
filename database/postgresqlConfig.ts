@@ -18,6 +18,16 @@ const sequelize = new Sequelize(
     define: {
         charset: 'utf-8',
         collate: 'utf8_general_ci'
+    },
+    timezone: "-03:00",
+    pool: {
+        max: 10,
+        min: 0,
+        acquire: 30000,
+        idle: 10000,
+    },
+    dialectOptions: {
+        connectTimeout: 60000,
     }
 });
 

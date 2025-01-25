@@ -2,6 +2,9 @@ import { Transaction } from "sequelize";
 import sequelize from "../../database/postgresqlConfig";
 import ConvenenteDTO from "../dto/Convenente";
 import Convenente from "../models/Convenente";
+import { Op } from "sequelize";
+import Convenio from "../models/Convenio";
+import Ifes from "../models/Ifes";
 
 export default class ConvenenteRepository {
 
@@ -57,6 +60,36 @@ export default class ConvenenteRepository {
         } catch (error: any) {
             console.log("[DB_CONVENENTES][CONVENENTES_REPOSITORY] Erro ao criar/buscar Convenente", convenente.name);
             console.log(error.name, error.message);
+        }
+    }
+
+    static async getAllConvenentesWithTotalValueReleasedsConvenios(convenentesRankingId: any[], convenentesIfesCode: any[], startYear: Date, endYear: Date) {
+        try {
+            return await Convenente.findAll({
+                where: { id: { [Op.in]: convenentesRankingId } },
+                include: [
+                    {
+                        model: Convenio,
+                        as: 'convenios',
+                        attributes: ['ifesCode'],
+                        where: {
+                            startEffectiveDate: { [Op.lte]: endYear },
+                            endEffectiveDate: { [Op.gte]: startYear },
+                            lastReleaseDate: { [Op.between]: [startYear, endYear] },
+                            convenenteId: { [Op.in]: convenentesRankingId }
+                        },
+                        include: [{ model: Ifes, as: 'ifes', where: { code: { [Op.in]: convenentesIfesCode } }, attributes: ['name'] }]
+                    }
+                ]
+            });
+
+
+        } catch (error: any) {
+            console.error("Erro ao buscar Ifes com mais repasses realizados:", error);
+            if (error.name === 'SequelizeDatabaseError') {
+                console.error("SQL gerado:", error.parent?.sql); // Imprime o SQL com erro, se disponível
+            }
+            return [];
         }
     }
 

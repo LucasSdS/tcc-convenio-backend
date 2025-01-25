@@ -1,6 +1,9 @@
 import Ifes from "../models/Ifes";
 import IfesDTO from "../dto/Ifes";
 import sequelize from "../../database/postgresqlConfig";
+import Convenio from "../models/Convenio";
+import { Op } from "sequelize";
+import Convenente from "../models/Convenente";
 
 export default class IfesRepository {
     static async getAllIfes(): Promise<IfesDTO[]> {
@@ -78,6 +81,43 @@ export default class IfesRepository {
         } catch (error: any) {
             await transaction.rollback();
             console.log(error.name, error.message);
+        }
+    }
+
+    static async getAllIfesWithTotalValueReleasedsConvenios(ifesRankingCode: any[], startYear: Date, endYear: Date) {
+        try {
+            return await Ifes.findAll({
+                where: {
+                    code: { [Op.in]: ifesRankingCode },
+                },
+                attributes: ['code', 'name'],
+                include: [{
+                    model: Convenio,
+                    as: 'convenios',
+                    attributes: ['totalValueReleased', 'convenenteId'],
+                    where: {
+                        startEffectiveDate: { [Op.lte]: endYear },
+                        endEffectiveDate: { [Op.gte]: startYear },
+                        lastReleaseDate: { [Op.between]: [startYear, endYear] }
+                    },
+                    required: false,
+                    include: [
+                        {
+                            model: Convenente,
+                            as: 'convenente',
+                            attributes: ['name', 'detailUrl']
+                        }
+                    ]
+                }],
+            });
+
+
+        } catch (error: any) {
+            console.error("Erro ao buscar Ifes com mais repasses realizados:", error);
+            if (error.name === 'SequelizeDatabaseError') {
+                console.error("SQL gerado:", error.parent?.sql);
+            }
+            return [];
         }
     }
 

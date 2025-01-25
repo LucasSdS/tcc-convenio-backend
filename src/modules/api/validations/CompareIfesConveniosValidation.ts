@@ -1,3 +1,5 @@
+import DataValidations from "./DataValidations";
+
 export default class IfesConveniosValidation {
 
     /**
@@ -9,10 +11,7 @@ export default class IfesConveniosValidation {
             throw new Error(`Erro ao validar o campo data ${data}`);
         }
 
-        const regexData = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/([1-9]\d{3})$/;
-        if (!regexData.test(data)) {
-            throw new Error(`Erro ao validar o campo data ${data}`);
-        }
+        DataValidations.validateData(data);
     }
 
     /**

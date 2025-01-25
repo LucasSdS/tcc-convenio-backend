@@ -1,12 +1,11 @@
-import sequelize from "../../database/postgresqlConfig";
 import ConvenioDTO from "../dto/Convenio";
 import Convenente from "../models/Convenente";
 import Convenio from "../models/Convenio";
-import { Op, Transaction } from "sequelize";
-import ConvenioHistoryRepository from "./ConvenioHistoryRepository";
 import ChangeLogDTO from "../dto/ChangeLog";
-import Ifes from "../models/Ifes";
 import ChangeLogRepository from "./ChangeLogRepository";
+import { col, fn, Op, Transaction } from "sequelize";
+import ConvenioHistoryRepository from "./ConvenioHistoryRepository";
+import Ifes from "../models/Ifes";
 
 export default class ConveniosRepository {
 
@@ -153,15 +152,9 @@ export default class ConveniosRepository {
                 {
                     where: {
                         ifesCode: ifesCode,
-                        startEffectiveDate: {
-                            [Op.lt]: dataFim
-                        },
-                        lastReleaseDate: {
-                            [Op.between]: [dataInicio, dataFim]
-                        },
-                        endEffectiveDate: {
-                            [Op.gt]: dataInicio
-                        }
+                        startEffectiveDate: { [Op.lte]: dataFim },
+                        endEffectiveDate: { [Op.gte]: dataInicio },
+                        lastReleaseDate: { [Op.between]: [dataInicio, dataFim] }
                     },
                     order: [['totalValueReleased', 'DESC']],
                     include: {
@@ -174,6 +167,55 @@ export default class ConveniosRepository {
         } catch (error: any) {
             console.log(error.name, error.message);
             throw new Error(`Erro: Erro ao tentar realizar a consulta para trazer todos os convênios da Ifes ${ifesCode} no período dataInicial: ${dataInicio} e dataFim: ${dataFim}`);
+        }
+    }
+
+    static async getIfesCodeAndTotalValueReleasedFromConvenios(startYear: Date, endYear: Date, limit: number): Promise<any> {
+        try {
+            return await Convenio.findAll({
+                attributes: [
+                    ['ifesCode', 'code'],
+                    [fn('COALESCE', fn('SUM', col('totalValueReleased')), 0), 'totalValueReleased'],
+                ],
+                where: {
+                    startEffectiveDate: { [Op.lte]: endYear },
+                    endEffectiveDate: { [Op.gte]: startYear },
+                    lastReleaseDate: { [Op.between]: [startYear, endYear] }
+                },
+                group: ['ifesCode'],
+                order: [[col('totalValueReleased'), 'DESC']],
+                limit: limit,
+                raw: true,
+            });
+
+        } catch (error: any) {
+            console.log("Ocorreu um erro ao obtermos o somatorio de totais repassados de todos os convenios agrupados por ifesCode");
+            console.log(error.name, error.message);
+        }
+    }
+
+    static async getConvenentesAndTotalValueReleasedFromConvenios(startYear: Date, endYear: Date, limit: number): Promise<any> {
+        try {
+            return await Convenio.findAll({
+                attributes: [
+                    'convenenteId',
+                    [fn('SUM', col('totalValueReleased')), 'totalValueReleased'],
+                    ['ifesCode', 'ifes']
+                ],
+                where: {
+                    startEffectiveDate: { [Op.lte]: endYear },
+                    endEffectiveDate: { [Op.gte]: startYear },
+                    lastReleaseDate: { [Op.between]: [startYear, endYear] }
+                },
+                group: ['convenenteId', 'ifesCode'],
+                order: [[col('totalValueReleased'), 'DESC']],
+                limit: limit,
+                raw: true
+            });
+
+        } catch (error: any) {
+            console.log("Ocorreu um erro ao obtermos o somatorio de totais repassados de todos os convenios agrupados por convenentes");
+            console.log(error.name, error.message);
         }
     }
 }

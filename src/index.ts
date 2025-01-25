@@ -1,13 +1,14 @@
 import express from "express";
-import 'dotenv/config'
+import * as dotenv from "dotenv";
 import PortalAPIRouter from "./routes/PortalAPIRouter";
 import IfesRouter from "./routes/IfesRouter";
 import sequelize from "../database/postgresqlConfig";
 import { enableCors } from "./routes/middlewares/cors";
 import ConvenioRouter from "./routes/ConvenioRouter";
-import createAssociationsModels from "./models/associations";
+import createAssociationsModels from "./models/Associations";
 import IfesController from "./modules/api/controller/IfesController";
 
+dotenv.config();
 let app = express();
 
 // Propriedades Servidor
@@ -35,8 +36,8 @@ app.listen(PORT, HOSTNAME, async (error?: Error) => {
             createAssociationsModels();
             await sequelize.sync({ alter: true });
             await IfesController.createIfesByIfesJsonList();
-            console.log('Conexao com banco de dados realizada com sucesso.');
-            console.log(`Servidor online no endereco: http://${HOSTNAME}:${PORT}`);
+            console.log('Conexão com banco de dados realizada com sucesso.');
+            console.log(`Servidor online no endereço: http://${HOSTNAME}:${PORT}`);
 
         } catch (error) {
             console.error('Unable to connect to the database:', error);
