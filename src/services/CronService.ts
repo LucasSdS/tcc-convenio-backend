@@ -4,8 +4,8 @@ import ConveniosService from "../modules/client-api-portal/service/ConveniosServ
 
 export default class CronService {
     static schedule(): void {
-        console.log("Agendando rotina do JOB para às 20:00");
-        cron.schedule('45 20 * * *', () => CronService.executeJob(), { timezone: "America/Sao_Paulo" });
+        console.log("Agendando rotina do JOB para às 02:00");
+        cron.schedule('0 2 * * *', () => CronService.executeJob(), { timezone: "America/Sao_Paulo" });
     }
 
     static async executeJob(): Promise<void> {
