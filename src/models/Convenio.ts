@@ -1,22 +1,25 @@
 import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import sequelize from "../../database/postgresqlConfig";
+import Ifes from "./Ifes";
+import Convenente from "./Convenente";
 
 class Convenio extends Model<InferAttributes<Convenio>, InferCreationAttributes<Convenio>> {
-    id?: number;
-    detailUrl: string;
-    ifesCode: string;
-    number: string;
-    description: string;
-    origin: string;
-    totalValueReleased: number;
-    destination: string;
-    destinationType: string;
-    destinationDetailUrl: string;
-    startEffectiveDate: Date;
-    endEffectiveDate: Date;
-    lastReleaseDate: Date;
-    valueLastRelease: number;
-    totalValue: number;
+    declare id?: number;
+    declare detailUrl: string;
+    declare ifesCode: string;
+    declare number: string;
+    declare description: string;
+    declare origin: string;
+    declare totalValueReleased: number;
+    declare startEffectiveDate: Date;
+    declare endEffectiveDate: Date;
+    declare lastReleaseDate: Date;
+    declare valueLastRelease: number;
+    declare totalValue: number;
+    declare convenenteId: number;
+
+    declare ifes?: Ifes;
+    declare convenente?: Convenente;
 };
 
 Convenio.init(
@@ -26,7 +29,8 @@ Convenio.init(
             primaryKey: true,
             field: 'id',
             allowNull: false,
-            autoIncrement: true
+            autoIncrement: true,
+            unique: true
         },
         detailUrl: {
             type: DataTypes.STRING,
@@ -34,8 +38,11 @@ Convenio.init(
         },
         ifesCode: {
             type: DataTypes.STRING,
-            field: 'ifesCode',
-            allowNull: false
+            allowNull: false,
+            references: {
+                model: 'Ifes',
+                key: 'code'
+            }
         },
         'number': {
             type: DataTypes.STRING,
@@ -52,18 +59,6 @@ Convenio.init(
         totalValueReleased: {
             type: DataTypes.DOUBLE,
             field: 'totalValueReleased'
-        },
-        destination: {
-            type: DataTypes.STRING,
-            field: 'destination'
-        },
-        destinationType: {
-            type: DataTypes.STRING,
-            field: 'destinationType'
-        },
-        destinationDetailUrl: {
-            type: DataTypes.STRING,
-            field: 'destinationDetailUrl'
         },
         startEffectiveDate: {
             type: DataTypes.DATEONLY,
@@ -84,6 +79,14 @@ Convenio.init(
         totalValue: {
             type: DataTypes.DOUBLE,
             field: 'totalValue'
+        },
+        convenenteId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'Convenentes',
+                key: 'id'
+            }
         }
     },
     {
