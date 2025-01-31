@@ -7,6 +7,7 @@ import { enableCors } from "./routes/middlewares/cors";
 import ConvenioRouter from "./routes/ConvenioRouter";
 import createAssociationsModels from "./models/Associations";
 import IfesController from "./modules/api/controller/IfesController";
+import CronService from "./services/CronService";
 
 dotenv.config();
 let app = express();
@@ -38,6 +39,7 @@ app.listen(PORT, HOSTNAME, async (error?: Error) => {
             await IfesController.createIfesByIfesJsonList();
             console.log('Conexão com banco de dados realizada com sucesso.');
             console.log(`Servidor online no endereço: http://${HOSTNAME}:${PORT}`);
+            CronService.schedule();
 
         } catch (error) {
             console.error('Unable to connect to the database:', error);
