@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import ConveniosRepository from "../../../repositories/ConveniosRepository";
-import ConveniosService from "../service/ConveniosService";
+import ConveniosService from "../services/ConveniosService";
 
 export default class ConvenioController {
     static async getConvenioByNumber(req: Request, res: Response, next: NextFunction) {

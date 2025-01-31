@@ -68,7 +68,7 @@ export default class ConveniosRepository {
             });
 
             if (convenioPersistido) {
-                if (convenioPersistido.totalValueReleased !== convenioToCreateOrUpdate.totalValueReleased ||
+                if (convenioPersistido.totalValueReleased < convenioToCreateOrUpdate.totalValueReleased ||
                     convenioPersistido.totalValue !== convenioToCreateOrUpdate.totalValue ||
                     convenioPersistido.valueLastRelease !== convenioToCreateOrUpdate.valueLastRelease
                 ) {
