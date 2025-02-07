@@ -1,3 +1,4 @@
+import BadRequestError from "../../../errors/BadRequestError";
 import DataValidations from "./DataValidations";
 
 export default class IfesConveniosValidation {
@@ -8,7 +9,7 @@ export default class IfesConveniosValidation {
      */
     static validateData(data: string): any {
         if (data === null || data === undefined || data.length < 10) {
-            throw new Error(`Erro ao validar o campo data ${data}`);
+            throw new BadRequestError(`Erro ao validar o campo data ${data}`);
         }
 
         DataValidations.validateData(data);
@@ -21,12 +22,12 @@ export default class IfesConveniosValidation {
      */
     static validateIfesSelected(ifesSelected: []): any {
         if (ifesSelected === null || ifesSelected === undefined || ifesSelected.length <= 1) {
-            throw new Error(`Erro ao validar campo ifesSelected ${ifesSelected} - está vazio ou nulo ou apenas uma universidade selecionada`)
+            throw new BadRequestError(`Erro ao validar campo ifesSelected ${ifesSelected} - está vazio ou nulo ou apenas uma universidade selecionada`)
         }
 
         const ifesSelectedSet = new Set(ifesSelected);
         if (ifesSelectedSet.size !== ifesSelected.length) {
-            throw new Error(`Erro ao validar campo ifesSelected ${ifesSelected} - possui codigos iguais`)
+            throw new BadRequestError(`Erro ao validar campo ifesSelected ${ifesSelected} - possui codigos iguais`)
         }
 
     }
