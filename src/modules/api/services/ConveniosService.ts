@@ -8,38 +8,45 @@ import ConvenentesService from "./ConvenentesService";
 
 export default class ConveniosService {
 
+    static async getAllConvenios() {
+        return await ConveniosRepository.getAll();
+    }
+
+    static async getConveniosByNumber(number: string) {
+        const convenio = await ConveniosRepository.getConvenioByNumber(number);
+        if (!convenio) {
+            throw new Error("Convenio not found");
+        }
+        return convenio;
+    }
+
     static async generateConveniosRanking(queryParams: any) {
         RankingConveniosValidations.validateData(queryParams.startYear);
         RankingConveniosValidations.validateData(queryParams.endYear);
         RankingConveniosValidations.validateLimit(queryParams.limit);
-        console.log("Validou os campos");
 
-        if (queryParams.startYear === null || queryParams.startYear === undefined) {
-            queryParams.startYear = buildDateOnly("01/01/2020");
-        } else {
-            queryParams.startYear = buildDateOnly(queryParams.startYear);
-        }
+        const startYear = buildDateOnly(queryParams.startYear);
+        const endYear = buildDateOnly(queryParams.endYear);
+        const limit = queryParams.limit;
 
-        if (queryParams.endYear === null || queryParams.endYear === undefined) {
-            const anoCorrente = new Date().getFullYear();
-            queryParams.endYear = buildDateOnly(`31/12/${anoCorrente}`);
-        } else {
-            queryParams.endYear = buildDateOnly(queryParams.endYear);
-        }
+        const ifesRankingPartial = await ConveniosService.getIfesCodeAndTotalValueReleasedFromConvenios(startYear, endYear, limit);
+        const ifesRankingDTO = await IfesService.getIfesRanking(ifesRankingPartial, startYear, endYear);
 
-        const ifesRankingPartial = await ConveniosService.getIfesCodeAndTotalValueReleasedFromConvenios(queryParams.startYear, queryParams.endYear, queryParams.limit);
-        const ifesRankingDTO = await IfesService.getIfesRanking(ifesRankingPartial, queryParams.startYear, queryParams.endYear);
+        const convenentesRankingPartial = await ConveniosService.getConvenentesAndTotalValueReleasedFromConvenios(startYear, endYear, limit);
+        const convenentesRankingDTO = await ConvenentesService.getConvenentesRanking(convenentesRankingPartial, startYear, endYear);
 
-        const convenentesRankingPartial = await ConveniosService.getConvenentesAndTotalValueReleasedFromConvenios(queryParams.startYear, queryParams.endYear, queryParams.limit);
-        const convenentesRankingDTO = await ConvenentesService.getConvenentesRanking(convenentesRankingPartial, queryParams.startYear, queryParams.endYear);
         return { ifesRankingDTO, convenentesRankingDTO };
     }
 
     static async getIfesCodeAndTotalValueReleasedFromConvenios(startYear: Date, endYear: Date, limit: number) {
-        return IfesRankingDTO.fromPartialIfesRankingEntities(await ConveniosRepository.getIfesCodeAndTotalValueReleasedFromConvenios(startYear, endYear, limit));
+        return IfesRankingDTO.fromPartialIfesRankingEntities(
+            await ConveniosRepository.getIfesCodeAndTotalValueReleasedFromConvenios(startYear, endYear, limit)
+        );
     }
 
     static async getConvenentesAndTotalValueReleasedFromConvenios(startYear: Date, endYear: Date, limit: number) {
-        return ConvenentesRankingDTO.fromPartialConvenentesRankingEntities(await ConveniosRepository.getConvenentesAndTotalValueReleasedFromConvenios(startYear, endYear, limit));
+        return ConvenentesRankingDTO.fromPartialConvenentesRankingEntities(
+            await ConveniosRepository.getConvenentesAndTotalValueReleasedFromConvenios(startYear, endYear, limit)
+        );
     }
 }
