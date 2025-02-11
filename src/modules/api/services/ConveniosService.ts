@@ -5,17 +5,21 @@ import ConveniosRepository from "../../../repositories/ConveniosRepository";
 import IfesRankingDTO from "../dtos/IfesRanking";
 import ConvenentesRankingDTO from "../dtos/ConvenentesRanking";
 import ConvenentesService from "./ConvenentesService";
+import NotFoundError from "../../../errors/NotFoundError";
 
 export default class ConveniosService {
 
     static async getAllConvenios() {
-        return await ConveniosRepository.getAll();
+        const convenios = await ConveniosRepository.getAll();
+        if (!convenios) {
+            throw new NotFoundError("Convenios não encontrados, tente novamente mais tarde");
+        }
     }
 
     static async getConveniosByNumber(number: string) {
         const convenio = await ConveniosRepository.getConvenioByNumber(number);
         if (!convenio) {
-            throw new Error("Convenio not found");
+            throw new NotFoundError("Convenio não encontrado, tente novamente mais tarde");
         }
         return convenio;
     }

@@ -5,6 +5,7 @@ import Convenente from "../models/Convenente";
 import { Op } from "sequelize";
 import Convenio from "../models/Convenio";
 import Ifes from "../models/Ifes";
+import InternalServerError from "../errors/InternalServerError";
 
 export default class ConvenenteRepository {
 
@@ -13,7 +14,7 @@ export default class ConvenenteRepository {
             return await Convenente.findByPk(id);
         } catch (error: any) {
             console.log(error.name, error.message);
-            throw error;
+            throw new InternalServerError("Erro ao tentar buscar convenente pelo id. Tente novamente mais tarde");
         }
     }
 
@@ -22,7 +23,7 @@ export default class ConvenenteRepository {
             return await Convenente.findAll();
         } catch (error: any) {
             console.log(error.name, error.message);
-            throw error;
+            throw new InternalServerError("Erro ao tentar buscar todos os convenentes. Tente novamente mais tarde");
         }
     }
 
@@ -38,7 +39,7 @@ export default class ConvenenteRepository {
         } catch (error: any) {
             transaction.rollback();
             console.log(error.name, error.message);
-            throw error;
+            throw new InternalServerError(`Erro ao tentar buscar todos os convenentes com url: ${convenenteUrls}`);
         }
     }
 
@@ -49,7 +50,7 @@ export default class ConvenenteRepository {
 
         } catch (error: any) {
             console.log("Erro no bulkCreateConvenentes", error.name, error.message);
-            throw error;
+            throw new InternalServerError("Erro ao tentar criar todos os convenentes de uma vez. Tente novamente mais tarde");
         }
 
     }
@@ -60,6 +61,7 @@ export default class ConvenenteRepository {
         } catch (error: any) {
             console.log("[DB_CONVENENTES][CONVENENTES_REPOSITORY] Erro ao criar/buscar Convenente", convenente.name);
             console.log(error.name, error.message);
+            throw new InternalServerError(`Erro ao tentar criar o convenente ${convenente.name}`);
         }
     }
 
@@ -86,10 +88,7 @@ export default class ConvenenteRepository {
 
         } catch (error: any) {
             console.error("Erro ao buscar Ifes com mais repasses realizados:", error);
-            if (error.name === 'SequelizeDatabaseError') {
-                console.error("SQL gerado:", error.parent?.sql); // Imprime o SQL com erro, se disponível
-            }
-            return [];
+            throw new InternalServerError("Erro ao tentar buscar Ifes com mais repasses realizados. Tente novamente mais tarde");
         }
     }
 

@@ -7,6 +7,7 @@ export default class IfesController {
         try {
             await IfesService.createIfesOnDatabase();
         } catch (error: any) {
+            console.log(`Ocorreu um erro ao tentar criar as Ifes no banco de dados`);
             console.log(error.name, error.message);
         }
     }

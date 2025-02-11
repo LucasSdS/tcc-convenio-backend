@@ -47,7 +47,7 @@ export default class IfesService {
             const ifesEncontrada = await IfesRepository.getIfesByCode(ifeSelected);
 
             if (!ifesEncontrada) {
-                throw new NotFoundError(`Erro: Não foi possível encontrar a universidade com código ${ifeSelected} no nosso Banco de Dados`);
+                throw new NotFoundError(`Erro: Não foi possível encontrar a universidade com código ${ifeSelected}`);
             }
 
             const response = await ConveniosRepository.getAllConveniosByIfesCodeAndByPeriod(ifeSelected, dataInicioDate, dataFimDate);
