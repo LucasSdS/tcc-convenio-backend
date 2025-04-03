@@ -12,7 +12,6 @@ export default class ConvenioController {
             res.status(200).json({ convenio });
 
         } catch (error: any) {
-            console.error(error.name, error.message);
             HandleErrors.handleErrors(error, req, res, next);
         }
     }

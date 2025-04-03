@@ -1,5 +1,33 @@
 import ConvenentesRankingDTO from "./ConvenentesRanking";
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     IfesRanking:
+ *       type: object
+ *       properties:
+ *         code:
+ *           type: string
+ *           description: Código da Ifes
+ *           example: "26234"
+ *         name:
+ *           type: string
+ *           description: Nome da Ifes
+ *           example: "Universidade Federal de Minas Gerais"
+ *         totalValueReleased:
+ *           type: number
+ *           description: Valor total liberado
+ *           example: 25750000.45
+ *         convenentes:
+ *           type: array
+ *           description: Lista de convenentes associados à Ifes
+ *           items:
+ *             $ref: '#/components/schemas/ConvenentesRanking'
+ *       required:
+ *         - code
+ *         - totalValueReleased
+ */
 export default class IfesRankingDTO {
     code: string;
     name?: string;
