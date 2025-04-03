@@ -4,6 +4,8 @@ import sequelize from "../../database/postgresqlConfig";
 import Convenio from "../models/Convenio";
 import { Op } from "sequelize";
 import Convenente from "../models/Convenente";
+import InternalServerError from "../errors/InternalServerError";
+import NotFoundError from "../errors/NotFoundError";
 
 export default class IfesRepository {
     static async getAllIfes(): Promise<IfesDTO[]> {
@@ -21,7 +23,7 @@ export default class IfesRepository {
         } catch (error: any) {
             console.log("Ocorreu um erro ao buscar todas Ifes");
             console.error(error.name, error.message);
-            throw error;
+            throw new InternalServerError("Ocorreu um erro ao tentar buscar todas as Ifes. Tente novamente mais tarde");
         }
     }
 
@@ -35,7 +37,7 @@ export default class IfesRepository {
             });
 
             if (!findIfesEntity) {
-                throw new Error(`Ifes's code ${ifesCode} not found in database ERROR`);
+                throw new NotFoundError(`Não foi possível encontrar a Ifes do código ${ifesCode}`);
             }
 
             const { code, acronym, name } = findIfesEntity.dataValues as { code: string, acronym: string, name: string };
@@ -44,7 +46,11 @@ export default class IfesRepository {
         } catch (error: any) {
             console.log(`Ocorreu um erro ao tentar buscar a Ifes ${ifesCode}`);
             console.error(error.name, error.message);
-            throw error
+            if (error instanceof NotFoundError) {
+                throw error;
+            } else {
+                throw new InternalServerError(`Erro ao tentar buscar o código da Ifes ${ifesCode}. Tente novamente mais tarde`);
+            }
         }
 
     }
@@ -62,13 +68,17 @@ export default class IfesRepository {
                 findIfes.code = ifes.code;
                 findIfes.save();
             } else {
-                throw new Error(`Ifes ${ifes.name} not found in database ERROR`);
+                throw new NotFoundError(`Não foi possível encontrar a Ifes ${ifes.name}`);
             }
 
         } catch (error: any) {
             console.log("Ocorreu um erro ao atualizar Ifes", ifes.name);
             console.error(error.name, error.message);
-            throw error;
+            if (error instanceof NotFoundError) {
+                throw error;
+            } else {
+                throw new InternalServerError(`Erro ao tentar atualizar Ifes ${ifes.name}. Tente novamente mais tarde`);
+            }
         }
     }
 
@@ -114,10 +124,7 @@ export default class IfesRepository {
 
         } catch (error: any) {
             console.error("Erro ao buscar Ifes com mais repasses realizados:", error);
-            if (error.name === 'SequelizeDatabaseError') {
-                console.error("SQL gerado:", error.parent?.sql);
-            }
-            return [];
+            throw new InternalServerError("Erro ao buscar Ifes com mais repasses relalizados. Tente novamente mais tarde");
         }
     }
 

@@ -1,3 +1,4 @@
+import BadRequestError from "../errors/BadRequestError";
 
 /**
  * 
@@ -12,6 +13,6 @@ export const buildDateOnly = (dateString: string): Date => {
         const [_, dia, mes, ano] = match as [_: string, dia: number, mes: number, ano: number];
         return new Date(ano, mes - 1, dia);
     } else {
-        throw new Error(`Não foi possível buildar a Data ${dateString}`);
+        throw new BadRequestError(`Não foi possível construir a Data ${dateString}`);
     }
 }

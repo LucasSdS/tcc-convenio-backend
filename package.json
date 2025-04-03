@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "node dist/src/index.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
-    "clean": "rm -R dist"
+    "clean": "rm -R dist",
+    "rebuild-docker-run": "npm run clean && npm run build && docker-compose down && docker-compose up -d --build"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +18,8 @@
     "@types/express": "^4.17.21",
     "@types/node": "^20.12.12",
     "@types/node-cron": "^3.0.11",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "nodemon": "^3.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
@@ -31,6 +34,8 @@
     "mongoose": "^8.8.1",
     "node-cron": "^3.0.3",
     "pg": "^8.11.5",
-    "sequelize": "^6.37.3"
+    "sequelize": "^6.37.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }

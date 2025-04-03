@@ -1,3 +1,4 @@
+import BadRequestError from "../../../errors/BadRequestError";
 import DataValidations from "./DataValidations";
 
 export default class RankingConveniosValidations {
@@ -7,8 +8,8 @@ export default class RankingConveniosValidations {
      * @returns void ou error
      */
     static validateData(data: string): any {
-        if (data.length < 10) {
-            throw new Error(`Erro ao validar o campo data ${data}`);
+        if (!data || data.length < 10) {
+            throw new BadRequestError(`Erro ao validar o campo data ${data}`);
         }
 
         DataValidations.validateData(data);
@@ -16,7 +17,7 @@ export default class RankingConveniosValidations {
 
     static validateLimit(limit: number): any {
         if (!limit || limit < 0 || limit > 20) {
-            throw new Error(`Erro ao validar o campo limit ${limit}`);
+            throw new BadRequestError(`Erro ao validar o campo limit ${limit}`);
         }
     }
 }

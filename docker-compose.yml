@@ -1,9 +1,10 @@
 version: '3.8'
 services:
-  db:
+  # PostgreSQL Database
+  postgres:
     build: ./database/
     container_name: tcc-postgres
-    image: tcc-image:v0
+    image: tcc-postgres:v0
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -11,29 +12,34 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tcc"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     networks:
-      - postgres
-  pg-admin:
+      - tcc_network
+
+  # PostgreSQL Admin Interface
+  pgadmin:
     image: dpage/pgadmin4
-    container_name: tcc_pgadmin
-    restart: always
-    environment: 
+    container_name: tcc-pgadmin
+    restart: unless-stopped
+    environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASS}
-    depends_on: 
-      - db
+    depends_on:
+      - postgres
     ports:
       - "8080:80"
     volumes:
-      - './pgadmin-data:/var/lib/pgadmin'
+      - pgadmin_data:/var/lib/pgadmin
     networks:
-      - postgres
+      - tcc_network
+
+  # MongoDB Database
   mongodb:
     image: mongodb/mongodb-community-server:5.0-ubuntu2004
     container_name: tcc-mongodb
@@ -43,12 +49,22 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - ./mongo-data:/data/db
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
     networks:
-      - postgres
+      - tcc_network
+
+  # MongoDB Admin Interface
   mongo-express:
     image: mongo-express
-    restart: always
+    container_name: tcc-mongo-express
+    restart: unless-stopped
     ports:
       - 8081:8081
     environment:
@@ -56,9 +72,13 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${POSTGRES_PASSWORD}
       ME_CONFIG_MONGODB_URL: ${MONGO_CONN}
       ME_CONFIG_BASICAUTH: false
+    depends_on:
+      - mongodb
     networks:
-      - postgres
-  api: 
+      - tcc_network
+
+  # API Application  
+  api:
     build: .
     container_name: tcc-api
     image: tcc-api:v0
@@ -71,11 +91,26 @@ services:
       MONGO_CONN: ${MONGO_CONN}
     ports:
       - "3001:3001"
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/healthcheck" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
     networks:
-      - postgres
+      - tcc_network
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
+      mongodb:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  mongodb_data:
+
+
 networks:
-  postgres:
+  tcc_network:
     driver: bridge

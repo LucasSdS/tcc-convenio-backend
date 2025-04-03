@@ -1,5 +1,26 @@
-import Convenente from "../models/Convenente"
+import Convenente from "../models/Convenente";
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Convenente:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: Nome do convenente
+ *         type:
+ *           type: string
+ *           description: Tipo do convenente
+ *         detailUrl:
+ *           type: string
+ *           description: URL com detalhes do convenente
+ *       required:
+ *         - name
+ *         - type
+ *         - detailUrl
+ */
 export default class ConvenenteDTO {
     name: string;
     type: string;

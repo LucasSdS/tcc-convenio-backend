@@ -6,8 +6,26 @@ import IfesComparadasDTO from "../dtos/IfesComparadas";
 import IfesRepository from "../../../repositories/IfesRepository";
 import ifesList from "../../../ifes.json";
 import IfesRankingDTO from "../dtos/IfesRanking";
+import BadRequestError from "../../../errors/BadRequestError";
+import NotFoundError from "../../../errors/NotFoundError";
 
 export default class IfesService {
+    static async getAllIfes() {
+        const allIfes = await IfesRepository.getAllIfes();
+        if (!allIfes) {
+            throw new NotFoundError("Ifes não encontradas", "Não foi encontrada nenhuma Ifes salva no nosso banco de dados");
+        }
+        return allIfes;
+    }
+
+    static async getIfesByCode(ifesCode: string) {
+        const ifes = await IfesRepository.getIfesByCode(ifesCode);
+        if (!ifes) {
+            throw new NotFoundError("Ifes não encontradas", "Não foi encontrada nenhuma Ifes salva no nosso banco de dados");
+        }
+        return ifes;
+    }
+
     static async compareIfesConvenios(ifesSelected: [], dataInicio: string, dataFim: string): Promise<any> {
         IfesConveniosValidation.validateIfesSelected(ifesSelected);
         IfesConveniosValidation.validateData(dataInicio);
@@ -17,7 +35,7 @@ export default class IfesService {
         const dataFimDate = buildDateOnly(dataFim);
 
         if (dataInicioDate > dataFimDate) {
-            throw new Error(`Erro de validação dataInicio ${dataInicio} não pode ser maior que dataFim ${dataFim}`);
+            throw new BadRequestError(`Erro de validação de datas`, `Erro de validação: dataInicio ${dataInicio} não pode ser maior que dataFim ${dataFim}`);
         }
 
         // TODO: Fazer uma checagem para quando a dataInicio for maior que o ano de 2024 para utilizar um outro formato de busca em outro banco de dados onde utilizaremos uma tabela de acompanhamento mais detalhado dos convenios para registrar as parcelas repassadas pelas universidades de forma mais precisa
@@ -29,7 +47,7 @@ export default class IfesService {
             const ifesEncontrada = await IfesRepository.getIfesByCode(ifeSelected);
 
             if (!ifesEncontrada) {
-                throw new Error(`Erro: Não foi possível encontrar a universidade com código ${ifeSelected} no nosso Banco de Dados`);
+                throw new NotFoundError(`Erro: Universidade não encontrada`, `Erro: Não foi possível encontrar a universidade com código ${ifeSelected}`);
             }
 
             const response = await ConveniosRepository.getAllConveniosByIfesCodeAndByPeriod(ifeSelected, dataInicioDate, dataFimDate);

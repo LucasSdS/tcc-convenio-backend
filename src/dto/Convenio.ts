@@ -1,6 +1,65 @@
 import Convenio from "../models/Convenio";
 import ConvenenteDTO from "./Convenente";
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Convenio:
+ *       type: object
+ *       properties:
+ *         detailUrl:
+ *           type: string
+ *           description: URL com detalhes do convênio
+ *         ifesCode:
+ *           type: string
+ *           description: Código da Ifes associada
+ *         number:
+ *           type: string
+ *           description: Número identificador do convênio
+ *         description:
+ *           type: string
+ *           description: Descrição do convênio
+ *         origin:
+ *           type: string
+ *           description: Origem do convênio
+ *         totalValueReleased:
+ *           type: number
+ *           description: Valor total liberado
+ *         startEffectiveDate:
+ *           type: string
+ *           format: date
+ *           description: Data de início da vigência
+ *         endEffectiveDate:
+ *           type: string
+ *           format: date
+ *           description: Data do fim da vigência
+ *         lastReleaseDate:
+ *           type: string
+ *           format: date
+ *           description: Data da última liberação
+ *         valueLastRelease:
+ *           type: number
+ *           description: Valor da última liberação
+ *         totalValue:
+ *           type: number
+ *           description: Valor total do convênio
+ *         convenenteId:
+ *           type: integer
+ *           description: ID do convenente associado
+ *         convenente:
+ *           $ref: '#/components/schemas/Convenente'
+ *           description: Dados do convenente associado
+ *       required:
+ *         - detailUrl
+ *         - ifesCode
+ *         - number
+ *         - description
+ *         - origin
+ *         - totalValueReleased
+ *         - startEffectiveDate
+ *         - endEffectiveDate
+ */
 export default class ConvenioDTO {
     detailUrl: string;
     ifesCode: string;
