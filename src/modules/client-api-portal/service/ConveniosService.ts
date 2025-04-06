@@ -1,18 +1,16 @@
 import { Transaction } from "sequelize";
 import sequelize from "../../../../database/postgresqlConfig";
 import ConvenioDTO from "../../../dto/Convenio";
-import ConvenenteRepository from "../../../repositories/ConvenenteRepository";
 import ConveniosRepository from "../../../repositories/ConveniosRepository";
-import IfesRepository from "../../../repositories/IfesRepository";
 import PortalAPI from "./ClientPortalAPI";
 import ConvenenteService from "./ConvenenteService";
+import IfesService from "../../api/services/IfesService";
 
-const BATCH_SIZE = 50;
 
 export default class ConveniosService {
 
     static async updateAllConvenios() {
-        const ifesList = await IfesRepository.getAllIfes();
+        const ifesList = await IfesService.getAllIfes();
         await Promise.all(ifesList.map(async (ifes) => {
             const resDTO = await this.updateConvenio(ifes.code)
             const conveniosDTO = resDTO.flat();
@@ -78,52 +76,4 @@ export default class ConveniosService {
             throw error;
         }
     }
-
-    // Forma Em estudo utilizando BULKs para criação de convenios e convenentes
-    static async createOrUpdateConveniosAndConvenentes(conveniosDTO: ConvenioDTO[]) {
-        const transaction = await sequelize.transaction();
-        try {
-            console.log("Iniciando createOrUpdateConveniosAndConvenentes");
-            // console.log("conveniosDTO", conveniosDTO);
-            const convenenteUrls = [...new Set(conveniosDTO.map(dto => dto.convenente.detailUrl))];
-            // console.log("convenenteUrls", convenenteUrls);
-
-            const existingConvenentes = await ConvenenteRepository.findByDetailUrlList(convenenteUrls);
-            // console.log("existingConvenentes", existingConvenentes);
-
-            const convenentesMap = Object.fromEntries(existingConvenentes.map(convenente => [convenente.detailUrl, convenente]));
-            // console.log("convenentesMap", convenentesMap);
-
-            const convenentesToCreate = conveniosDTO
-                .filter(convenioDTO => !convenentesMap[convenioDTO.convenente.detailUrl])
-                .map(convenioDTO => convenioDTO.convenente.toEntity());
-
-            // console.log("convenentesToCreate", convenentesToCreate);
-
-            for (let i = 0; i < convenentesToCreate.length; i += BATCH_SIZE) {
-                const batch = convenentesToCreate.slice(i, i + BATCH_SIZE);
-                const newConvenentes = await ConvenenteRepository.bulkCreateConvenentes(batch, transaction);
-                for (const convenente of newConvenentes) {
-                    convenentesMap[convenente.detailUrl] = convenente;
-                }
-            }
-
-            // console.log("convenentesMap", convenentesMap);
-
-            const conveniosToCreateOrUpdate = conveniosDTO.map(convenioDTO => convenioDTO.toEntity(convenentesMap[convenioDTO.convenente.detailUrl].id));
-            // console.log("conveniosToCreateOrUpdate", conveniosToCreateOrUpdate);
-
-            for (let i = 0; i < conveniosToCreateOrUpdate.length; i += BATCH_SIZE) {
-                const batch = conveniosToCreateOrUpdate.slice(i, i + BATCH_SIZE);
-                await ConveniosRepository.bulkCreateConveniosAndConvenentes(batch, transaction);
-            }
-            await transaction.commit();
-            console.log("Transação concluida com sucesso");
-        } catch (error: any) {
-            await transaction.rollback();
-            console.log(error.name, error.message);
-            throw error;
-        }
-    }
-
 }

@@ -8,6 +8,8 @@ import ConvenioRouter from "./routes/ConvenioRouter";
 import createAssociationsModels from "./models/Associations";
 import IfesController from "./modules/api/controller/IfesController";
 import CronService from "./services/CronService";
+import { specs, swaggerUi } from "./config/SwaggerConfig";
+import { notFoundHandler } from "./routes/middlewares/notFound";
 
 dotenv.config();
 let app = express();
@@ -21,6 +23,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(enableCors);
 
+// Configuração Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, { explorer: true }));
+
 // Rotas:
 app.use("/healthcheck", (req, res, next) => {
     res.send(200)
@@ -28,6 +33,8 @@ app.use("/healthcheck", (req, res, next) => {
 app.use("/portal-api", PortalAPIRouter);
 app.use("/api", IfesRouter);
 app.use("/api", ConvenioRouter);
+
+app.use(notFoundHandler);
 
 // Executando Servidor
 app.listen(PORT, HOSTNAME, async (error?: Error) => {

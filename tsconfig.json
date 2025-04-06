@@ -11,7 +11,8 @@
     "rootDir": ".",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+    "removeComments": false
   },
   "include": [
     "src/",

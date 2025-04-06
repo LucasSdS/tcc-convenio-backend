@@ -4,6 +4,8 @@ import Convenio from "../models/Convenio";
 import { col, fn, Op, Transaction } from "sequelize";
 import ConvenioHistoryRepository from "./ConvenioHistoryRepository";
 import Ifes from "../models/Ifes";
+import InternalServerError from "../errors/InternalServerError";
+import NotFoundError from "../errors/NotFoundError";
 
 export default class ConveniosRepository {
 
@@ -22,7 +24,7 @@ export default class ConveniosRepository {
             });
 
             if (!findConvenioEntity) {
-                throw new Error(`Convenio's number ${conveniosNumber} not found in database ERROR`);
+                throw new NotFoundError(`Erro ao tentar buscar o convenio: ${conveniosNumber}`);
             }
 
             const convenio = ConvenioDTO.fromEntity(findConvenioEntity);
@@ -31,6 +33,11 @@ export default class ConveniosRepository {
         } catch (error: any) {
             console.log(`Ocorreu um erro ao tentar buscar o convenio ${conveniosNumber}`);
             console.error(error.name, error.message);
+            if (error instanceof NotFoundError) {
+                throw error;
+            } else {
+                throw new InternalServerError(`Erro ao tentar buscar o convênio ${conveniosNumber}. Tente novamente mais tarde`);
+            }
         }
     }
 
@@ -54,7 +61,7 @@ export default class ConveniosRepository {
 
         } catch (error: any) {
             console.log("Erro no BulkCreateConveniosAndConvenentes", error.name, error.message);
-            throw error;
+            throw new InternalServerError("Erro ao tentar criar convenios e convenentes");
         }
     }
 
@@ -99,6 +106,7 @@ export default class ConveniosRepository {
         } catch (error: any) {
             console.log("[DB_CONVENIOS][CONVENIOS_REPOSITORY] Erro ao tentar criar ou atualizar convenio", convenioToCreateOrUpdate.number, convenioToCreateOrUpdate.ifesCode, "Fazendo rollback");
             console.log(error.name, error.message);
+            throw new InternalServerError("Erro ao tentar criar ou atualizar convenio");
         }
     }
 
@@ -123,6 +131,7 @@ export default class ConveniosRepository {
         } catch (error: any) {
             console.log("Ocorreu um erro ao buscar todos os convenios");
             console.error(error.name, error.message);
+            throw new InternalServerError("Erro ao tentar buscar todos os convenios. Tente novamente mais tarde");
         }
     }
 
@@ -167,7 +176,7 @@ export default class ConveniosRepository {
 
         } catch (error: any) {
             console.log(error.name, error.message);
-            throw new Error(`Erro: Erro ao tentar realizar a consulta para trazer todos os convênios da Ifes ${ifesCode} no período dataInicial: ${dataInicio} e dataFim: ${dataFim}`);
+            throw new InternalServerError(`Erro ao tentar realizar a consulta para trazer todos os convênios da Ifes ${ifesCode} no período dataInicial: ${dataInicio} e dataFim: ${dataFim}. Tente novamente mais tarde`);
         }
     }
 
@@ -190,8 +199,9 @@ export default class ConveniosRepository {
             });
 
         } catch (error: any) {
-            console.log("Ocorreu um erro ao obtermos o somatorio de totais repassados de todos os convenios agrupados por ifesCode");
+            console.log("Erro ao tentar obter somatorio de valores totais repassados de todos os os convênios agrupados por ifesCode");
             console.log(error.name, error.message);
+            throw new InternalServerError("Erro ao tentar obter somatorio de valores totais repassados de todos os os convênios agrupados por ifesCode. Tente novamente mais tarde");
         }
     }
 
@@ -215,8 +225,9 @@ export default class ConveniosRepository {
             });
 
         } catch (error: any) {
-            console.log("Ocorreu um erro ao obtermos o somatorio de totais repassados de todos os convenios agrupados por convenentes");
+            console.log("Erro ao tentar obter o somatorio de valores totais repassados de todos os convenios agrupados por convenentes");
             console.log(error.name, error.message);
+            throw new InternalServerError("Erro ao tentar obter o somatorio de valores totais repassados de todos os convenios agrupados por convenentes. Tente novamente mais tarde");
         }
     }
 }

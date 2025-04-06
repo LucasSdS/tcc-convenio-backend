@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import ConveniosService from "../service/ConveniosService";
+import HandleErrors from "../../../errors/HandleErrors";
 
 export default class PortalAPIController {
 
@@ -12,10 +13,7 @@ export default class PortalAPIController {
             });
 
         } catch (error: any) {
-            console.log(error.name, error.message);
-            res.status(500).json({
-                message: "Ocorreu um erro ao tentarmos atualizar os convenios, tente novamente mais tarde"
-            });
+            HandleErrors.handleErrors(error, req, res, next);
         }
     }
 
