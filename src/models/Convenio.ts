@@ -57,7 +57,7 @@ Convenio.init(
             field: 'origin'
         },
         totalValueReleased: {
-            type: DataTypes.DOUBLE,
+            type: DataTypes.DECIMAL(20, 2),
             field: 'totalValueReleased'
         },
         startEffectiveDate: {
@@ -73,11 +73,11 @@ Convenio.init(
             field: 'lastReleaseDate'
         },
         valueLastRelease: {
-            type: DataTypes.DOUBLE,
+            type: DataTypes.DECIMAL(20, 2),
             field: 'valueLastRelease'
         },
         totalValue: {
-            type: DataTypes.DOUBLE,
+            type: DataTypes.DECIMAL(20, 2),
             field: 'totalValue'
         },
         convenenteId: {
