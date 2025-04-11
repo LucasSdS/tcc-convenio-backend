@@ -82,8 +82,11 @@ services:
     build: .
     container_name: tcc-api
     image: tcc-api:v0
+    volumes:
+      - ./logs:/app/logs:rw
     environment:
-      APIKEY: ${APIKEY}
+      API_KEY_0: ${API_KEY_0}
+      API_KEY_1: ${API_KEY_1}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
