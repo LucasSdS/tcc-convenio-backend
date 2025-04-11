@@ -5,36 +5,51 @@ import ConveniosRepository from "../../../repositories/ConveniosRepository";
 import PortalAPI from "./ClientPortalAPI";
 import ConvenenteService from "./ConvenenteService";
 import IfesService from "../../api/services/IfesService";
+import { logger } from "../../../utils/ContextLogger";
 
 
 export default class ConveniosService {
+    private static conveniosServiceLogger = logger.createContextLogger("ConveniosServiceLog");
 
     static async updateAllConvenios() {
         const ifesList = await IfesService.getAllIfes();
         await Promise.all(ifesList.map(async (ifes) => {
-            const resDTO = await this.updateConvenio(ifes.code)
+            const resDTO = await this.getConveniosData(ifes.code)
             const conveniosDTO = resDTO.flat();
             await this.createConveniosAndConvenentes(conveniosDTO);
         }));
     }
 
-    static async updateConvenio(ifesCode: string): Promise<ConvenioDTO[]> {
+    static async getConveniosData(ifesCode: string): Promise<ConvenioDTO[]> {
+        console.log(`Iniciando processamento da instituição: ${ifesCode}`);
+        this.conveniosServiceLogger.info(`Iniciando processamento da instituição: ${ifesCode}`, "ConveniosServiceLog");
+
         const resDTO: ConvenioDTO[][] = [];
         let currYear = new Date().getFullYear();
         let cycleYear = true;
+
         while (cycleYear) {
             let page = 1;
-            let response = await PortalAPI.call(ifesCode, currYear.toString(), page);
+            let response = await PortalAPI.getConveniosByYear(ifesCode, currYear.toString(), page);
             resDTO.push(response);
+
+            await new Promise(resolve => setTimeout(resolve, 200));
+
             while (response.length) {
                 page++;
-                response = await PortalAPI.call(ifesCode, currYear.toString(), page);
+                response = await PortalAPI.getConveniosByYear(ifesCode, currYear.toString(), page);
                 resDTO.push(response)
+
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
             // if (!response.length && page === 1) cycleYear = false
-            if (currYear < 2000) cycleYear = false
+            // if (currYear < 2000) cycleYear = false
+            if (currYear < 2024) cycleYear = false
             currYear--;
         }
+
+        await new Promise(resolve => setTimeout(resolve, 200));
+        this.conveniosServiceLogger.info(`Encontrados ${resDTO.length} convênios para instituição ${ifesCode} \nResposta: ${resDTO}`, "ConveniosServiceLog");
         return resDTO.flat();
     }
 
