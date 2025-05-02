@@ -8,7 +8,7 @@ export default class CronService {
     static schedule(): void {
         this.cronLogger.info("Iniciando o JOB de atualização dos convênios para às 02:00", "cronService");
         console.log("Agendando rotina do JOB para às 02:00");
-        cron.schedule('00 02 * * *', () => CronService.executeJob(), { timezone: "America/Sao_Paulo" });
+        cron.schedule('40 02 * * *', () => CronService.executeJob(), { timezone: "America/Sao_Paulo" });
     }
 
     static async executeJob(): Promise<void> {

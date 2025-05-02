@@ -3,6 +3,7 @@ import ConvenioDTO from "../../../dto/Convenio";
 import ConvenenteDTO from "../../../dto/Convenente";
 import { normalizeValueNumber } from "../../../utils/NumberUtils";
 import { logger } from "../../../utils/ContextLogger";
+import { parse } from "path";
 
 export default class PortalAPI {
     public static portalAPILogger = logger.createContextLogger("PortalAPI");
@@ -18,7 +19,18 @@ export default class PortalAPI {
                 },
                 responseType: "json"
             });
-            return parseResponseToDTO(response.data, ifesCode);
+
+            if (response.status !== 200) {
+                console.log("[PortalAPI.getConveniosByYear] Erro ao buscar convênios da universidade com código", ifesCode, " no ano:", year, "paginacao: ", page);
+                this.portalAPILogger.error(`Erro ao buscar convênios da universidade com código ${ifesCode} no ano: ${year} paginacao: ${page}`, "PortalAPI");
+                throw new Error(`Erro ao buscar convênios da universidade com código ${ifesCode} no ano: ${year} paginacao: ${page}`);
+            }
+
+            const convenios = response.data.map((element: any) => {
+                return parseResponseToDTO(element, ifesCode);
+            });
+
+            return convenios;
         } catch (error: any) {
             console.error(error.name, error.message);
             throw error;
@@ -38,10 +50,11 @@ export default class PortalAPI {
             });
 
             console.log(`[PortalAPI.geConveniosByCode] resposta de detalhe do Convenio: ${code}`, response.data);
-            this.portalAPILogger.info(`Resposta de detalhe do convenio: ${code} - \nresposta: ${JSON.stringify(response.data)}`, "PortalAPI");
+            this.portalAPILogger.info(`Resposta da API de detalhe do convenio com código: ${code} - \nresposta: ${JSON.stringify(response.data)}`, "PortalAPI");
 
             if (response.data && response.data.length > 0) {
-                return response.data[0];
+                const convenio = response.data[0];
+                return parseResponseToDTO(convenio, convenio.orgao.codigoSIAFI);
             }
 
             return null;
@@ -60,91 +73,84 @@ const checkValueIsUnder10000 = (element: any): boolean => {
         element.valor < 10000;
 }
 
-const parseResponseToDTO = (response: any[], ifesCode: string): ConvenioDTO[] => {
-    let convenios: ConvenioDTO[] = [];
+const parseResponseToDTO = (convenio: any, ifesCode: string): ConvenioDTO | null => {
 
-    response.forEach(async (element: any) => {
-        if (checkValueIsUnder10000(element)) {
-            console.log("[ClientPortalAPI.parseResponseToDTO] ALERTA!!! Valor potencialmente truncado detectado:", {
-                codigo: element.dimConvenio.codigo,
-                valorLiberado: element.valorLiberado,
-                valorDaUltimaLiberacao: element.valorDaUltimaLiberacao,
-                valor: element.valor,
-                dataInicio: element.dataInicioVigencia
-            });
-
-            PortalAPI.portalAPILogger.warn(`ALERTA!!! Valor potencialmente truncado detectado: \n${JSON.stringify({
-                codigo: element.dimConvenio.codigo,
-                valorLiberado: element.valorLiberado,
-                valorDaUltimaLiberacao: element.valorDaUltimaLiberacao,
-                valor: element.valor,
-                dataInicio: element.dataInicioVigencia
-            })}`, "PortalAPI");
-
-            element = await PortalAPI.geConveniosByCode(element.dimConvenio.codigo);
-
-            if (!element) {
-                console.log("[ClientPortalAPI.parseResponseToDTO] Não foi possível obter o detalhe do convênio:", element.dimConvenio.codigo);
-                PortalAPI.portalAPILogger.error(`Não foi possível obter o detalhe do convênio: ${element.dimConvenio.codigo}`, "PortalAPI");
-                return;
-            }
-        }
-
-        const detailConvenioUrlTemplate = `https://portaldatransparencia.gov.br/convenios/${element.dimConvenio.codigo}`;
-        const cnpjDesformatado = element.convenente.cnpjFormatado.replace(/\D/g, '');
-        const convenenteNome = element.convenente.nome.toLowerCase().replace(/[\s\W]+/g, '-');
-        const detailDestinationUrlTemplate = `https://portaldatransparencia.gov.br/pessoa-juridica/${cnpjDesformatado}-${convenenteNome}`;
-        let convenente = new ConvenenteDTO({ name: element.convenente.nome.toLowerCase(), type: element.convenente.tipo.toLowerCase(), detailUrl: detailDestinationUrlTemplate });
-
-        console.log(`Valores do convênio ${element.dimConvenio.codigo} antes da conversão:`, {
-            valorOriginal: element.valor,
-            tipoValorOriginal: typeof element.valor,
-            valorLiberadoOriginal: element.valorLiberado,
-            valorUltimaLiberacaoOriginal: element.valorDaUltimaLiberacao
+    if (checkValueIsUnder10000(convenio)) {
+        console.log("[ClientPortalAPI.parseResponseToDTO] ALERTA!!! Valor potencialmente truncado detectado:", {
+            codigo: convenio.dimConvenio.codigo,
+            valorLiberado: convenio.valorLiberado,
+            valorDaUltimaLiberacao: convenio.valorDaUltimaLiberacao,
+            valor: convenio.valor,
+            dataInicio: convenio.dataInicioVigencia
         });
 
-        PortalAPI.portalAPILogger.info(`Valores do convênio ${element.dimConvenio.codigo} antes da conversão: {
-            valorOriginal: ${element.valor},
-            tipoValorOriginal: ${typeof element.valor},
-            valorLiberadoOriginal: ${element.valorLiberado},
-            valorUltimaLiberacaoOriginal: ${element.valorDaUltimaLiberacao}
-        }`, "PortalAPI");
+        PortalAPI.portalAPILogger.warn(`ALERTA!!! Valor potencialmente truncado detectado: \n${JSON.stringify({
+            codigo: convenio.dimConvenio.codigo,
+            valorLiberado: convenio.valorLiberado,
+            valorDaUltimaLiberacao: convenio.valorDaUltimaLiberacao,
+            valor: convenio.valor,
+            dataInicio: convenio.dataInicioVigencia
+        })}`, "PortalAPI");
 
-        const totalValueReleased = normalizeValueNumber(element.valorLiberado);
-        const valueLastRelease = normalizeValueNumber(element.valorDaUltimaLiberacao);
-        const totalValue = normalizeValueNumber(element.valor);
+        // convenio = await PortalAPI.geConveniosByCode(convenio.dimConvenio.codigo);
 
-        console.log(`Valores do convênio ${element.dimConvenio.codigo} após a conversão:`, {
-            valorConvertido: totalValue,
-            valorLiberadoConvertido: totalValueReleased,
-            valorUltimaLiberacaoConvertido: valueLastRelease
-        });
+        // if (!convenio) {
+        //     console.log("[ClientPortalAPI.parseResponseToDTO] Não foi possível obter o detalhe do convênio:", convenio.dimConvenio.codigo);
+        //     PortalAPI.portalAPILogger.error(`Não foi possível obter o detalhe do convênio: ${convenio.dimConvenio.codigo}`, "PortalAPI");
+        //     return null;
+        // }
+    }
 
-        PortalAPI.portalAPILogger.info(`Valores do convênio ${element.dimConvenio.codigo} após conversão: {
-            valorConvertido: ${totalValue},
-            valorLiberadoConvertido: ${totalValueReleased},
-            valorUltimaLiberacaoConvertido: ${valueLastRelease}
-        }`, "PortalAPI");
+    const detailConvenioUrlTemplate = `https://portaldatransparencia.gov.br/convenios/${convenio.dimConvenio.codigo}`;
+    const cnpjDesformatado = convenio.convenente.cnpjFormatado.replace(/\D/g, '');
+    const convenenteNome = convenio.convenente.nome.toLowerCase().replace(/[\s\W]+/g, '-');
+    const detailDestinationUrlTemplate = `https://portaldatransparencia.gov.br/pessoa-juridica/${cnpjDesformatado}-${convenenteNome}`;
+    let convenente = new ConvenenteDTO({ name: convenio.convenente.nome.toLowerCase(), type: convenio.convenente.tipo.toLowerCase(), detailUrl: detailDestinationUrlTemplate });
 
-        let convenio = new ConvenioDTO({
-            detailUrl: detailConvenioUrlTemplate,
-            ifesCode: ifesCode,
-            number: element.dimConvenio.codigo,
-            description: element.dimConvenio.objeto,
-            origin: element.unidadeGestora.orgaoVinculado.nome,
-            totalValueReleased: element.valorLiberado,
-            startEffectiveDate: new Date(element.dataInicioVigencia),
-            endEffectiveDate: new Date(element.dataFinalVigencia),
-            lastReleaseDate: new Date(element.dataUltimaLiberacao),
-            valueLastRelease: element.valorDaUltimaLiberacao,
-            totalValue: element.valor,
-            convenente: convenente,
-        });
-        convenios.push(convenio);
+    console.log(`Valores do convênio ${convenio.dimConvenio.codigo} da API:`, {
+        valorOriginal: convenio.valor,
+        tipoValorOriginal: typeof convenio.valor,
+        valorLiberadoOriginal: convenio.valorLiberado,
+        valorUltimaLiberacaoOriginal: convenio.valorDaUltimaLiberacao
     });
 
-    console.log("Encontrados ", convenios.length, " convenios da ife: ", ifesCode);
-    PortalAPI.portalAPILogger.info(`Encontrados ${convenios.length} convênios da ife: ${ifesCode} \n${convenios}`, "PortalAPI");
-    return convenios;
+    PortalAPI.portalAPILogger.info(`Valores do convênio ${convenio.dimConvenio.codigo} da API: {
+        valorOriginal: ${convenio.valor},
+        tipoValorOriginal: ${typeof convenio.valor},
+        valorLiberadoOriginal: ${convenio.valorLiberado},
+        valorUltimaLiberacaoOriginal: ${convenio.valorDaUltimaLiberacao}
+    }`, "PortalAPI");
+
+    const totalValueReleased = normalizeValueNumber(convenio.valorLiberado);
+    const valueLastRelease = normalizeValueNumber(convenio.valorDaUltimaLiberacao);
+    const totalValue = normalizeValueNumber(convenio.valor);
+
+    console.log(`Valores do convênio ${convenio.dimConvenio.codigo} após a conversão:`, {
+        valorConvertido: totalValue,
+        valorLiberadoConvertido: totalValueReleased,
+        valorUltimaLiberacaoConvertido: valueLastRelease
+    });
+
+    PortalAPI.portalAPILogger.info(`Valores do convênio ${convenio.dimConvenio.codigo} após conversão: {
+        valorConvertido: ${totalValue},
+        valorLiberadoConvertido: ${totalValueReleased},
+        valorUltimaLiberacaoConvertido: ${valueLastRelease}
+    }`, "PortalAPI");
+
+    return new ConvenioDTO({
+        detailUrl: detailConvenioUrlTemplate,
+        ifesCode: ifesCode,
+        number: convenio.dimConvenio.codigo,
+        description: convenio.dimConvenio.objeto,
+        origin: convenio.unidadeGestora.orgaoVinculado.nome,
+        totalValueReleased: convenio.valorLiberado,
+        startEffectiveDate: new Date(convenio.dataInicioVigencia),
+        endEffectiveDate: new Date(convenio.dataFinalVigencia),
+        lastReleaseDate: new Date(convenio.dataUltimaLiberacao),
+        valueLastRelease: convenio.valorDaUltimaLiberacao,
+        totalValue: convenio.valor,
+        convenente: convenente,
+    });
+
 }
 

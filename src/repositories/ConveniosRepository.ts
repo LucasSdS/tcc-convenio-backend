@@ -6,8 +6,10 @@ import ConvenioHistoryRepository from "./ConvenioHistoryRepository";
 import Ifes from "../models/Ifes";
 import InternalServerError from "../errors/InternalServerError";
 import NotFoundError from "../errors/NotFoundError";
+import { logger } from "../utils/ContextLogger";
 
 export default class ConveniosRepository {
+    private static conveniosRepositoryLogger = logger.createContextLogger("ConveniosRepositoryLog");
 
     static async getConvenioByNumber(conveniosNumber: string): Promise<any> {
         console.log(`Buscando convenio do numero ${conveniosNumber}`);
@@ -73,6 +75,8 @@ export default class ConveniosRepository {
                 },
                 transaction
             });
+
+            this.conveniosRepositoryLogger.info(`Convenio vindo API: ${JSON.stringify(convenioToCreateOrUpdate)} \nConvenio já existente: ${JSON.stringify(convenioPersistido)}`, "ConveniosRepositoryLog");
 
             if (convenioPersistido) {
                 if (convenioPersistido.totalValueReleased < convenioToCreateOrUpdate.totalValueReleased ||

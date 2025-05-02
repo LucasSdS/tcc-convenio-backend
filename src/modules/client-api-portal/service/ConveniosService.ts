@@ -91,4 +91,25 @@ export default class ConveniosService {
             throw error;
         }
     }
+
+    static async updateConvenio(convenioId: string) {
+        const transaction = await sequelize.transaction();
+        try {
+            const convenioDTO = await PortalAPI.geConveniosByCode(convenioId);
+            if (!convenioDTO) {
+                console.log("[CONVENIOS_SERVICE] Não foi possível encontrar o convenio com o id: ", convenioId);
+                this.conveniosServiceLogger.error(`Não foi possível encontrar o convenio com o id: ${convenioId}`, "ConveniosServiceLog");
+                return;
+            }
+            const convenioToPersist = convenioDTO?.toEntity(convenioDTO.convenente);
+            await this.createConvenio(convenioToPersist, transaction);
+            await transaction.commit();
+            return convenioToPersist;
+        } catch (error: any) {
+            console.log("[CONVENIOS_SERVICE] Erro ao tentar atualizar convenio");
+            this.conveniosServiceLogger.error(`Erro ao tentar atualizar convenio: ${convenioId} \nErro: ${error.message}`, "ConveniosServiceLog");
+            console.log(error.name, error.message);
+            await transaction.rollback();
+        }
+    }
 }
