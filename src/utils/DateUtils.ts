@@ -16,3 +16,10 @@ export const buildDateOnly = (dateString: string): Date => {
         throw new BadRequestError(`Não foi possível construir a Data ${dateString}`);
     }
 }
+
+export const getTimestamp = (date: Date): number => {
+    if (!date) return 0;
+    if (date instanceof Date) return date.getTime();
+    if (typeof date === 'string') return new Date(date).getTime();
+    return 0;
+}
