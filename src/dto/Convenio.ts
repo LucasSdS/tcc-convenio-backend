@@ -19,7 +19,6 @@ const keys = [
   "lastReleaseDate",
   "valueLastRelease",
   "totalValue",
-  "isPotentiallyTruncated",
 ];
 
 /**

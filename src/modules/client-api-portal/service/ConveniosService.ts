@@ -92,7 +92,7 @@ export default class ConveniosService {
 
             const convenioExistsDTO = ConvenioDTO.fromEntity(convenioExists);
 
-            if (convenioToPersist.equals(convenioExistsDTO!)) {
+            if (convenioExistsDTO!.equals(convenioToPersist!)) {
                 return convenioExists;
             }
 
@@ -170,7 +170,7 @@ export default class ConveniosService {
                 }
     
                 const convenioPersistedDTO = ConvenioDTO.fromEntity(convenioPersisted);
-                if (convenioDTO.equals(convenioPersistedDTO!)) {
+                if (convenioPersistedDTO!.equals(convenioDTO)) {
                     console.log("[CONVENIOS_SERVICE] O convênio já está atualizado, não há necessidade de atualizar novamente: ", convenioPersisted.number);
                     this.conveniosServiceLogger.info(`O convênio já está atualizado, não há necessidade de atualizar novamente: ${convenioPersisted.number}`, "ConveniosServiceLog");
                     await transaction.rollback();
