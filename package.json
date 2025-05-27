@@ -8,7 +8,7 @@
     "start": "node dist/src/index.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
     "clean": "rm -R dist",
-    "rebuild-docker-run": "npm run clean && npm run build && docker-compose down && docker-compose up -d --build"
+    "rebuild-docker-run": "npm run clean && npm run build && docker compose down --remove-orphans && docker network rm tcc-convenio-backend_tcc_network || true && docker compose up -d --build"  
   },
   "keywords": [],
   "author": "",
