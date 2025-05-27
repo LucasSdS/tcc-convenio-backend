@@ -43,5 +43,3 @@ export default class CronService {
         }
     }
 }
-// 300 req / min => 300 / 60 sec = 5 req / sec = 200ms por req
-// 600 req / min => 600 / 60 sec = 10 req / sec = 100ms por req
