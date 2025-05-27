@@ -2,8 +2,6 @@ import { Router } from "express";
 import PortalAPIController from "../modules/client-api-portal/controller/PortalAPIController";
 
 const router: Router = Router();
-
-
 /**
  * @swagger
  * /portal-api/update:
@@ -33,7 +31,7 @@ router.get("/update", PortalAPIController.updateDB);
 /**
  * @swagger
  * /portal-api/update/{convenioId}:
- *   patch:
+ *   put:
  *     summary: Atualiza um convênio específico no banco de dados
  *     tags: [Portal API]
  *     parameters:
@@ -55,6 +53,6 @@ router.get("/update", PortalAPIController.updateDB);
  *                   type: string
  *                   example: "Convenio Atualizado"
  */
-router.patch("/update/:convenioId", PortalAPIController.updateConvenio);
+router.put("/update/:convenioId", PortalAPIController.updateConvenio);
 
 export default router;
