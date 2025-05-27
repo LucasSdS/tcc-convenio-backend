@@ -20,9 +20,6 @@ export default class ConveniosService {
     }
 
     static async getConveniosData(ifesCode: string): Promise<ConvenioDTO[]> {
-        console.log(`Iniciando processamento da instituição: ${ifesCode}`);
-        // this.conveniosServiceLogger.info(`Iniciando processamento da instituição: ${ifesCode}`, "ConveniosServiceLog");
-
         const resDTO: ConvenioDTO[][] = [];
         let currYear = new Date().getFullYear();
         let cycleYear = true;
@@ -95,11 +92,11 @@ export default class ConveniosService {
 
             const convenioExistsDTO = ConvenioDTO.fromEntity(convenioExists);
 
-            if (ConvenioDTO.equals(convenioToPersist, convenioExistsDTO!)) {
+            if (convenioToPersist.equals(convenioExistsDTO!)) {
                 return convenioExists;
             }
 
-            const [newValue, oldValue, isPotentiallyTruncated] = ConvenioDTO.getDiff(convenioToPersist, convenioExistsDTO!);
+            const [newValue, oldValue, isPotentiallyTruncated] = convenioExistsDTO!?.getDiff(convenioToPersist);
 
             if (Object.keys(newValue).length === 0) {
                 return convenioExists;
@@ -173,14 +170,14 @@ export default class ConveniosService {
                 }
     
                 const convenioPersistedDTO = ConvenioDTO.fromEntity(convenioPersisted);
-                if (ConvenioDTO.equals(convenioDTO, convenioPersistedDTO!)) {
+                if (convenioDTO.equals(convenioPersistedDTO!)) {
                     console.log("[CONVENIOS_SERVICE] O convênio já está atualizado, não há necessidade de atualizar novamente: ", convenioPersisted.number);
                     this.conveniosServiceLogger.info(`O convênio já está atualizado, não há necessidade de atualizar novamente: ${convenioPersisted.number}`, "ConveniosServiceLog");
                     await transaction.rollback();
                     continue;
                 }
     
-                const [newValue, oldValue, isPotentiallyTruncated] = ConvenioDTO.getDiff(convenioDTO, convenioPersistedDTO!);
+                const [newValue, oldValue, isPotentiallyTruncated] = convenioPersistedDTO!?.getDiff(convenioDTO);
     
                 if (Object.keys(newValue).length === 0) {
                     await transaction.rollback();
