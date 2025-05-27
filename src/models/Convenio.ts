@@ -20,6 +20,8 @@ class Convenio extends Model<InferAttributes<Convenio>, InferCreationAttributes<
 
     declare ifes?: Ifes;
     declare convenente?: Convenente;
+
+    declare isPotentiallyTruncated?: boolean;
 };
 
 Convenio.init(
@@ -87,13 +89,18 @@ Convenio.init(
                 model: 'Convenentes',
                 key: 'id'
             }
+        },
+        isPotentiallyTruncated: {
+            type: DataTypes.BOOLEAN,
+            field: 'isPotentiallyTruncated',
+            defaultValue: false
         }
     },
     {
         sequelize,
         modelName: 'Convenios',
         tableName: 'Convenios',
-        timestamps: false
+        timestamps: true,
     }
 );
 
