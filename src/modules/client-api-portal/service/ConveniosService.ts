@@ -62,8 +62,8 @@ export default class ConveniosService {
                     convenentesMap.set(convenentePersisted.name, convenentePersisted.id);
                 }
 
-                const convenioToPersist = convenioDTO.toEntity(convenenteId);
-                await ConveniosService.createOrUpdate(convenioToPersist, transaction);
+                convenioDTO.convenenteId = convenenteId;
+                await ConveniosService.createOrUpdate(convenioDTO, transaction);
 
                 await transaction.commit();
             } catch (error: any) {
@@ -75,7 +75,7 @@ export default class ConveniosService {
     }
 
 
-    static async createOrUpdate(convenioToPersist: any, transaction?: Transaction) {
+    static async createOrUpdate(convenioToPersist: ConvenioDTO, transaction?: Transaction) {
         try {
             const convenioExists = await ConveniosRepository.findConvenioByCode(convenioToPersist.number);
 
@@ -92,11 +92,11 @@ export default class ConveniosService {
 
             const convenioExistsDTO = ConvenioDTO.fromEntity(convenioExists);
 
-            if (convenioExistsDTO!.equals(convenioToPersist!)) {
+            if (convenioToPersist.equals(convenioExistsDTO!)) {
                 return convenioExists;
             }
 
-            const [newValue, oldValue, isPotentiallyTruncated] = convenioExistsDTO!?.getDiff(convenioToPersist);
+            const [newValue, oldValue, isPotentiallyTruncated] = convenioToPersist.getDiff(convenioExistsDTO!);
 
             if (Object.keys(newValue).length === 0) {
                 return convenioExists;
@@ -170,20 +170,19 @@ export default class ConveniosService {
                 }
     
                 const convenioPersistedDTO = ConvenioDTO.fromEntity(convenioPersisted);
-                if (convenioPersistedDTO!.equals(convenioDTO)) {
+                if (convenioDTO.equals(convenioPersistedDTO!)) {
                     console.log("[CONVENIOS_SERVICE] O convênio já está atualizado, não há necessidade de atualizar novamente: ", convenioPersisted.number);
                     this.conveniosServiceLogger.info(`O convênio já está atualizado, não há necessidade de atualizar novamente: ${convenioPersisted.number}`, "ConveniosServiceLog");
                     await transaction.rollback();
                     continue;
                 }
     
-                const [newValue, oldValue, isPotentiallyTruncated] = convenioPersistedDTO!?.getDiff(convenioDTO);
+                const [newValue, oldValue, isPotentiallyTruncated] = convenioDTO.getDiff(convenioPersistedDTO!);
     
                 if (Object.keys(newValue).length === 0) {
                     await transaction.rollback();
                     continue;
                 }
-    
                 Object.entries(newValue).forEach(([key, value]) => {
                     (convenioPersisted as any)[key] = value;
                 });
