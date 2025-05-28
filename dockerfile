@@ -25,7 +25,7 @@ RUN npm ci --only=production
 
 COPY --from=build /app/dist ./dist
 
-RUN mkdir -p /app/logs && chmod 777 /app/logs
+RUN mkdir -p /app/logs && chmod 755 /app/logs
 
 VOLUME ["/app/logs"]
 
