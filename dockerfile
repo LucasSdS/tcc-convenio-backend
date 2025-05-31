@@ -25,6 +25,10 @@ RUN npm ci --only=production
 
 COPY --from=build /app/dist ./dist
 
+RUN mkdir -p /app/logs && chmod 755 /app/logs
+
+VOLUME ["/app/logs"]
+
 EXPOSE 3001
 
 CMD ["node", "dist/src/index.js"]

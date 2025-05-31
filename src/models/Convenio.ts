@@ -20,6 +20,8 @@ class Convenio extends Model<InferAttributes<Convenio>, InferCreationAttributes<
 
     declare ifes?: Ifes;
     declare convenente?: Convenente;
+
+    declare isPotentiallyTruncated?: boolean;
 };
 
 Convenio.init(
@@ -57,7 +59,7 @@ Convenio.init(
             field: 'origin'
         },
         totalValueReleased: {
-            type: DataTypes.DOUBLE,
+            type: DataTypes.DECIMAL(20, 2),
             field: 'totalValueReleased'
         },
         startEffectiveDate: {
@@ -73,11 +75,11 @@ Convenio.init(
             field: 'lastReleaseDate'
         },
         valueLastRelease: {
-            type: DataTypes.DOUBLE,
+            type: DataTypes.DECIMAL(20, 2),
             field: 'valueLastRelease'
         },
         totalValue: {
-            type: DataTypes.DOUBLE,
+            type: DataTypes.DECIMAL(20, 2),
             field: 'totalValue'
         },
         convenenteId: {
@@ -87,13 +89,18 @@ Convenio.init(
                 model: 'Convenentes',
                 key: 'id'
             }
+        },
+        isPotentiallyTruncated: {
+            type: DataTypes.BOOLEAN,
+            field: 'isPotentiallyTruncated',
+            defaultValue: false
         }
     },
     {
         sequelize,
         modelName: 'Convenios',
         tableName: 'Convenios',
-        timestamps: false
+        timestamps: true,
     }
 );
 

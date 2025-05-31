@@ -6,12 +6,12 @@ import ConvenioHistoryRepository from "./ConvenioHistoryRepository";
 import Ifes from "../models/Ifes";
 import InternalServerError from "../errors/InternalServerError";
 import NotFoundError from "../errors/NotFoundError";
+import { logger } from "../utils/ContextLogger";
 
 export default class ConveniosRepository {
+    private static conveniosRepositoryLogger = logger.createContextLogger("ConveniosRepositoryLog");
 
     static async getConvenioByNumber(conveniosNumber: string): Promise<any> {
-        console.log(`Buscando convenio do numero ${conveniosNumber}`);
-
         try {
             let findConvenioEntity = await Convenio.findOne({
                 where: {
@@ -31,8 +31,11 @@ export default class ConveniosRepository {
 
             return convenio;
         } catch (error: any) {
-            console.log(`Ocorreu um erro ao tentar buscar o convenio ${conveniosNumber}`);
             console.error(error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar buscar o convênio ${conveniosNumber}. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
             if (error instanceof NotFoundError) {
                 throw error;
             } else {
@@ -40,6 +43,42 @@ export default class ConveniosRepository {
             }
         }
     }
+
+    static async findConvenioByCode(number: string | number): Promise<Convenio | null>{
+        try {
+            return await Convenio.findOne({
+                where: {
+                    number: number
+                }
+            });
+
+        }catch (error: any) {
+            console.log(`Erro ao tentar buscar convenio por código ${number}`, error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar buscar convenio por código ${number}. Erro: ${error.message}`, 
+                "ConveniosRepositoryLog"
+            );
+            throw new InternalServerError(`Erro ao tentar buscar convenio por código ${number}`);
+        }
+    }
+
+    static async findAllPotentiallyTruncated(): Promise<Convenio[]> {
+        try {
+            return await Convenio.findAll({
+                where: {
+                    isPotentiallyTruncated: true
+                },
+                order: [['createdAt', 'DESC']],
+            });
+        } catch (error: any) {
+            console.log("Erro ao tentar buscar convenios potencialmente truncados", error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar buscar convenios potencialmente truncados. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
+            throw new InternalServerError("Erro ao tentar buscar convenios potencialmente truncados");
+        }
+    } 
 
     static async bulkCreateConveniosAndConvenentes(conveniosToCreateOrUpdate: any[], transaction: Transaction): Promise<void> {
         console.log(`Criando ${conveniosToCreateOrUpdate.length} convenios`);
@@ -65,53 +104,57 @@ export default class ConveniosRepository {
         }
     }
 
-    static async createOrUpdate(convenioToCreateOrUpdate: any, transaction?: Transaction): Promise<any> {
+    static async create(convenio: any, transaction: Transaction): Promise<Convenio | null>{
         try {
-            const convenioPersistido = await Convenio.findOne({
-                where: {
-                    number: convenioToCreateOrUpdate.number
-                },
-                transaction
-            });
+            this.conveniosRepositoryLogger.info(
+                `Criando convenio: ${JSON.stringify(convenio)}`,
+                "ConveniosRepositoryLog"
+            );
 
-            if (convenioPersistido) {
-                if (convenioPersistido.totalValueReleased < convenioToCreateOrUpdate.totalValueReleased ||
-                    convenioPersistido.totalValue !== convenioToCreateOrUpdate.totalValue ||
-                    convenioPersistido.valueLastRelease !== convenioToCreateOrUpdate.valueLastRelease
-                ) {
-                    await ConvenioHistoryRepository.saveConvenioHistory(
-                        convenioPersistido.id,
-                        {
-                            totalValueReleased: convenioPersistido.totalValueReleased,
-                            totalValue: convenioPersistido.totalValue,
-                            valueLastRelease: convenioPersistido.valueLastRelease
-                        },
-                        {
-                            totalValueReleased: convenioToCreateOrUpdate.totalValueReleased,
-                            totalValue: convenioToCreateOrUpdate.totalValue,
-                            valueLastRelease: convenioToCreateOrUpdate.valueLastRelease
-                        }
-                    );
-                    convenioPersistido.totalValueReleased = convenioToCreateOrUpdate.totalValueReleased;
-                    convenioPersistido.valueLastRelease = convenioToCreateOrUpdate.valueLastRelease;
-                    convenioPersistido.totalValue = convenioToCreateOrUpdate.totalValue;
-                    convenioPersistido.lastReleaseDate = convenioToCreateOrUpdate.lastReleaseDate;
-                    await convenioPersistido.save({ transaction });
-                }
-
-                return convenioPersistido;
-            }
-
-            return await Convenio.create(convenioToCreateOrUpdate, { transaction: transaction });
+            return await Convenio.create(convenio, { transaction });
         } catch (error: any) {
-            console.log("[DB_CONVENIOS][CONVENIOS_REPOSITORY] Erro ao tentar criar ou atualizar convenio", convenioToCreateOrUpdate.number, convenioToCreateOrUpdate.ifesCode, "Fazendo rollback");
-            console.log(error.name, error.message);
-            throw new InternalServerError("Erro ao tentar criar ou atualizar convenio");
+            console.log("Erro ao tentar criar convenio", error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar criar convenio: ${JSON.stringify(convenio)} \nErro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
+
+            throw new InternalServerError("Erro ao tentar criar convenio");
+        }
+    }
+
+    static async update(convenioToUpdate: any, oldValues: any, newValues: any, transaction: Transaction): Promise<Convenio | null> {
+        try {
+            this.conveniosRepositoryLogger.info(
+                `Atualizando convenio: ${JSON.stringify(convenioToUpdate)} - OldValues: ${JSON.stringify(oldValues)} - newValues: ${JSON.stringify(newValues)}`,
+                "ConveniosRepositoryLog"
+            );
+
+            await ConvenioHistoryRepository.saveConvenioHistory(
+                convenioToUpdate.id,
+                oldValues,
+                newValues
+            )
+
+            this.conveniosRepositoryLogger.info(
+                `Convenio atualizado com sucesso: ${JSON.stringify(convenioToUpdate)} - oldValues: ${JSON.stringify(oldValues)} - newValues: ${JSON.stringify(newValues)}`,
+                "ConveniosRepositoryLog"
+            );
+
+            return await convenioToUpdate.save({ transaction });
+            
+        }catch (error: any){
+            console.log("Erro ao tentar atualizar convenio", error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar atualizar convenio: ${JSON.stringify(convenioToUpdate)} - oldValues: ${JSON.stringify(oldValues)} - newValues: ${JSON.stringify(newValues)} - \nErro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
+
+            throw new InternalServerError("Erro ao tentar atualizar convenio");
         }
     }
 
     static async getAll() {
-        console.log("Buscando todos os convenios");
         try {
             return await Convenio.findAll(
                 {
@@ -130,7 +173,10 @@ export default class ConveniosRepository {
             );
         } catch (error: any) {
             console.log("Ocorreu um erro ao buscar todos os convenios");
-            console.error(error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar buscar todos os convenios. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
             throw new InternalServerError("Erro ao tentar buscar todos os convenios. Tente novamente mais tarde");
         }
     }
@@ -176,6 +222,10 @@ export default class ConveniosRepository {
 
         } catch (error: any) {
             console.log(error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar realizar a consulta para trazer todos os convênios da Ifes ${ifesCode} no período dataInicial: ${dataInicio} e dataFim: ${dataFim}. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
             throw new InternalServerError(`Erro ao tentar realizar a consulta para trazer todos os convênios da Ifes ${ifesCode} no período dataInicial: ${dataInicio} e dataFim: ${dataFim}. Tente novamente mais tarde`);
         }
     }
@@ -200,7 +250,10 @@ export default class ConveniosRepository {
 
         } catch (error: any) {
             console.log("Erro ao tentar obter somatorio de valores totais repassados de todos os os convênios agrupados por ifesCode");
-            console.log(error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar obter somatorio de valores totais repassados de todos os os convênios agrupados por ifesCode. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
             throw new InternalServerError("Erro ao tentar obter somatorio de valores totais repassados de todos os os convênios agrupados por ifesCode. Tente novamente mais tarde");
         }
     }
@@ -226,7 +279,10 @@ export default class ConveniosRepository {
 
         } catch (error: any) {
             console.log("Erro ao tentar obter o somatorio de valores totais repassados de todos os convenios agrupados por convenentes");
-            console.log(error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar obter o somatorio de valores totais repassados de todos os convenios agrupados por convenentes. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
             throw new InternalServerError("Erro ao tentar obter o somatorio de valores totais repassados de todos os convenios agrupados por convenentes. Tente novamente mais tarde");
         }
     }

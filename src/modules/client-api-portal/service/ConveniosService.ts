@@ -5,36 +5,43 @@ import ConveniosRepository from "../../../repositories/ConveniosRepository";
 import PortalAPI from "./ClientPortalAPI";
 import ConvenenteService from "./ConvenenteService";
 import IfesService from "../../api/services/IfesService";
-
+import { logger } from "../../../utils/ContextLogger";
 
 export default class ConveniosService {
+    private static conveniosServiceLogger = logger.createContextLogger("ConveniosServiceLog");
 
     static async updateAllConvenios() {
         const ifesList = await IfesService.getAllIfes();
         await Promise.all(ifesList.map(async (ifes) => {
-            const resDTO = await this.updateConvenio(ifes.code)
+            const resDTO = await this.getConveniosData(ifes.code)
             const conveniosDTO = resDTO.flat();
             await this.createConveniosAndConvenentes(conveniosDTO);
         }));
     }
 
-    static async updateConvenio(ifesCode: string): Promise<ConvenioDTO[]> {
+    static async getConveniosData(ifesCode: string): Promise<ConvenioDTO[]> {
         const resDTO: ConvenioDTO[][] = [];
         let currYear = new Date().getFullYear();
         let cycleYear = true;
+
         while (cycleYear) {
+            this.conveniosServiceLogger.info(`Buscando convênios da instituição ${ifesCode} no ano: ${currYear}`, "ConveniosServiceLog");
             let page = 1;
-            let response = await PortalAPI.call(ifesCode, currYear.toString(), page);
+            let response = await PortalAPI.getConveniosByYear(ifesCode, currYear.toString(), page);
             resDTO.push(response);
+
             while (response.length) {
                 page++;
-                response = await PortalAPI.call(ifesCode, currYear.toString(), page);
+                response = await PortalAPI.getConveniosByYear(ifesCode, currYear.toString(), page);
                 resDTO.push(response)
             }
             // if (!response.length && page === 1) cycleYear = false
             if (currYear < 2000) cycleYear = false
+            // if (currYear < 2024) cycleYear = false
             currYear--;
         }
+
+        this.conveniosServiceLogger.info(`Encontrados ${resDTO.length} convênios para instituição ${ifesCode} \nResposta: ${resDTO}`, "ConveniosServiceLog");
         return resDTO.flat();
     }
 
@@ -55,8 +62,8 @@ export default class ConveniosService {
                     convenentesMap.set(convenentePersisted.name, convenentePersisted.id);
                 }
 
-                const convenioToPersist = convenioDTO.toEntity(convenenteId);
-                await ConveniosService.createConvenio(convenioToPersist, transaction);
+                convenioDTO.convenenteId = convenenteId;
+                await ConveniosService.createOrUpdate(convenioDTO, transaction);
 
                 await transaction.commit();
             } catch (error: any) {
@@ -67,13 +74,140 @@ export default class ConveniosService {
         }
     }
 
-    static async createConvenio(convenioToPersist: any, transaction?: Transaction) {
+
+    static async createOrUpdate(convenioToPersist: ConvenioDTO, transaction?: Transaction) {
         try {
-            const convenioPersistedOrUpdated = await ConveniosRepository.createOrUpdate(convenioToPersist, transaction);
-            console.log("Convenio: ", convenioPersistedOrUpdated.ifesCode, convenioPersistedOrUpdated.number, convenioPersistedOrUpdated.id, " Criado ou Atualizado com sucesso");
-        } catch (error: any) {
+            const convenioExists = await ConveniosRepository.findConvenioByCode(convenioToPersist.number);
+
+            if (!convenioExists){
+                convenioToPersist.isPotentiallyTruncated = 
+                    ConveniosService.isValueUnder10k(convenioToPersist.totalValueReleased) ||
+                    ConveniosService.isValueUnder10k(convenioToPersist.valueLastRelease) ||
+                    ConveniosService.isValueUnder10k(convenioToPersist.totalValue);
+
+                const convenioCreated = await ConveniosRepository.create(convenioToPersist, transaction!);
+                this.conveniosServiceLogger.info(`Convenio criado com sucesso: ${JSON.stringify(convenioCreated)}`, "ConveniosServiceLog");
+                return convenioCreated;
+            }
+
+            const convenioExistsDTO = ConvenioDTO.fromEntity(convenioExists);
+
+            if (convenioToPersist.equals(convenioExistsDTO!)) {
+                return convenioExists;
+            }
+
+            const [newValue, oldValue, isPotentiallyTruncated] = convenioToPersist.getDiff(convenioExistsDTO!);
+
+            if (Object.keys(newValue).length === 0) {
+                return convenioExists;
+            }
+
+            Object.entries(newValue).forEach(([key, value]) => {
+                (convenioExists as any)[key] = value;
+            });
+
+            convenioExists.isPotentiallyTruncated = isPotentiallyTruncated;
+
+            const convenioUpdated = await ConveniosRepository.update(convenioExists, oldValue, newValue, transaction!);
+
+            this.conveniosServiceLogger.info(`Convenio atualizado com sucesso: ${JSON.stringify(convenioUpdated)}`, "ConveniosServiceLog");
+
+            return convenioUpdated;
+        } catch(error: any) {
             console.log(error.name, error.message);
             throw error;
+        }
+    }
+
+    
+
+    static async updateConvenio(convenioId: string) {
+        const transaction = await sequelize.transaction();
+        try {
+            const convenioDTO = await PortalAPI.getConveniosByCode(convenioId);
+            if (!convenioDTO) {
+                console.log("[CONVENIOS_SERVICE] Não foi possível encontrar o convenio com o id: ", convenioId);
+                this.conveniosServiceLogger.error(`Não foi possível encontrar o convenio com o id: ${convenioId}`, "ConveniosServiceLog");
+                return;
+            }
+
+            const convenioCreatedOrUpdated = await ConveniosService.createOrUpdate(convenioDTO, transaction);
+            await transaction.commit();
+            return convenioCreatedOrUpdated;
+        } catch (error: any) {
+            console.log("[CONVENIOS_SERVICE] Erro ao tentar atualizar convenio");
+            this.conveniosServiceLogger.error(`Erro ao tentar atualizar convenio: ${convenioId} \nErro: ${error.message}`, "ConveniosServiceLog");
+            console.log(error.name, error.message);
+            await transaction.rollback();
+        }
+    }
+
+
+    static isValueUnder10k(value: number): boolean {
+        return value < 10000;
+    }
+
+    static async updateAllConveniosPottentialyTruncated(){
+        try {
+            const conveniosPotentiallyTruncated = await ConveniosRepository.findAllPotentiallyTruncated();
+            if (!conveniosPotentiallyTruncated || conveniosPotentiallyTruncated.length === 0) {
+                console.log("[CONVENIOS_SERVICE] Não existem convênios potencialmente truncados para atualizar");
+                this.conveniosServiceLogger.info("Não existem convênios potencialmente truncados para atualizar", "ConveniosServiceLog");
+                return;
+            }
+
+            let updatedConvenios = [];
+
+            for(let convenioPersisted of conveniosPotentiallyTruncated){
+                const transaction = await sequelize.transaction();
+                const convenioDTO = await PortalAPI.getConveniosByCode(convenioPersisted.number);
+                
+                if (!convenioDTO) {
+                    console.log("[CONVENIOS_SERVICE] Não foi possível encontrar o convenio com o id: ", convenioPersisted.number);
+                    this.conveniosServiceLogger.error(`Não foi possível encontrar o convenio com o id: ${convenioPersisted.number}`, "ConveniosServiceLog");
+                    await transaction.rollback();
+                    continue;
+                }
+    
+                const convenioPersistedDTO = ConvenioDTO.fromEntity(convenioPersisted);
+                if (convenioDTO.equals(convenioPersistedDTO!)) {
+                    console.log("[CONVENIOS_SERVICE] O convênio já está atualizado, não há necessidade de atualizar novamente: ", convenioPersisted.number);
+                    this.conveniosServiceLogger.info(`O convênio já está atualizado, não há necessidade de atualizar novamente: ${convenioPersisted.number}`, "ConveniosServiceLog");
+                    await transaction.rollback();
+                    continue;
+                }
+    
+                const [newValue, oldValue, isPotentiallyTruncated] = convenioDTO.getDiff(convenioPersistedDTO!);
+    
+                if (Object.keys(newValue).length === 0) {
+                    await transaction.rollback();
+                    continue;
+                }
+                Object.entries(newValue).forEach(([key, value]) => {
+                    (convenioPersisted as any)[key] = value;
+                });
+    
+                convenioPersisted.isPotentiallyTruncated = isPotentiallyTruncated;
+    
+                try {
+                    const convenioUpdated = await ConveniosRepository.update(convenioPersisted, oldValue, newValue, transaction!);
+                    updatedConvenios.push(convenioUpdated);
+                    this.conveniosServiceLogger.info(`Convenio atualizado com sucesso: ${JSON.stringify(convenioUpdated)}`, "ConveniosServiceLog");
+                    await transaction.commit();
+                }catch (error: any) {
+                    console.log("[CONVENIOS_SERVICE] Erro ao tentar atualizar convenio potencialmente truncado");
+                    this.conveniosServiceLogger.error(`Erro ao tentar atualizar convenio potencialmente truncado: ${convenioPersisted.number} \nErro: ${error.message}`, "ConveniosServiceLog");
+                    console.log(error.name, error.message);
+                    await transaction.rollback();
+                }
+            }
+
+            return updatedConvenios;
+
+        }catch (error: any) {
+            console.log("[CONVENIOS_SERVICE] Erro ao tentar atualizar todos os convênios potencialmente truncados");
+            this.conveniosServiceLogger.error(`Erro ao tentar atualizar todos os convênios potencialmente truncados: ${error.message}`, "ConveniosServiceLog");
+            console.log(error.name, error.message);
         }
     }
 }

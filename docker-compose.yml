@@ -82,13 +82,18 @@ services:
     build: .
     container_name: tcc-api
     image: tcc-api:v0
+    volumes:
+      - ./logs:/app/logs:rw
     environment:
-      APIKEY: ${APIKEY}
+      API_KEY_0: ${API_KEY_0}
+      API_KEY_1: ${API_KEY_1}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       HOST: ${HOST}
       MONGO_CONN: ${MONGO_CONN}
+      CRON_UPDATE_CONVENIOS_ALL: ${CRON_UPDATE_CONVENIOS_ALL}
+      CRON_UPDATE_CONVENIOS_TRUNCATED: ${CRON_UPDATE_CONVENIOS_TRUNCATED}
     ports:
       - "3001:3001"
     healthcheck:

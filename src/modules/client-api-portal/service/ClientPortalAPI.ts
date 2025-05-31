@@ -1,56 +1,94 @@
 import axios from "axios";
 import ConvenioDTO from "../../../dto/Convenio";
 import ConvenenteDTO from "../../../dto/Convenente";
+import { logger } from "../../../utils/ContextLogger";
+import { apiQueue } from "../../../utils/RequestQueue";
+import { getApiKey } from "../../../utils/ApiKey";
 
 export default class PortalAPI {
-    static async call(ifesCode: string, year: string, page: number): Promise<ConvenioDTO[]> {
-        console.log("Executando PortalAPI da ifesCode", ifesCode, "ano:", year, "page: ", page);
-        const urlTemplate = `https://api.portaldatransparencia.gov.br/api-de-dados/convenios?codigoOrgao=${ifesCode}&pagina=${page}&dataUltimaLiberacaoInicial=01/01/${year}&dataUltimaLiberacaoFinal=31/12/${year}`;
-        try {
-            const response = await axios(urlTemplate, {
-                headers: {
-                    "chave-api-dados": process.env.APIKEY
-                },
-                responseType: "json"
-            });
-            return parseResponseToDTO(response.data, ifesCode);
-        } catch (error: any) {
-            console.error(error.name, error.message);
-            throw error;
-        }
+    public static portalAPILogger = logger.createContextLogger("PortalAPI");
+
+    static async getConveniosByYear(ifesCode: string, year: string, page: number): Promise<ConvenioDTO[]> {
+        return apiQueue.add(async () => {
+            const urlTemplate = `https://api.portaldatransparencia.gov.br/api-de-dados/convenios?codigoOrgao=${ifesCode}&pagina=${page}&dataUltimaLiberacaoInicial=01/01/${year}&dataUltimaLiberacaoFinal=31/12/${year}`;
+            const RANDOMAPIKEY = getApiKey();
+            try {
+                const response = await axios(urlTemplate, {
+                    headers: {
+                        "chave-api-dados": RANDOMAPIKEY
+                    },
+                    responseType: "json"
+                });
+
+                if (response.status !== 200) {
+                    this.portalAPILogger.error(`Erro ao buscar convênios da universidade com código ${ifesCode} no ano: ${year} paginacao: ${page}`, "PortalAPI");
+                    throw new Error(`Erro ao buscar convênios da universidade com código ${ifesCode} no ano: ${year} paginacao: ${page}`);
+                }
+
+                const convenios = response.data.map((element: any) => {
+                    return parseResponseToDTO(element, ifesCode);
+                });
+
+                return convenios;
+            } catch (error: any) {
+                console.error(error.name, error.message);
+                this.portalAPILogger.error(`Erro ao buscar convênios da universidade com código ${ifesCode} no ano: ${year} paginacao: ${page} com APIKEY: ${RANDOMAPIKEY} - Erro: ${error.message}`, "PortalAPI");
+                throw error;
+            }
+        });
+    }
+
+    static async getConveniosByCode(code: string): Promise<ConvenioDTO | null> {
+        return apiQueue.add(async () => {
+            const urlTemplate = `https://api.portaldatransparencia.gov.br/api-de-dados/convenios/numero?numero=${code}&pagina=1`;
+            const RANDOMAPIKEY = getApiKey();
+            try {
+                const response = await axios(urlTemplate, {
+                    headers: {
+                        "chave-api-dados": RANDOMAPIKEY
+                    },
+                    responseType: "json"
+                });
+
+                if (response.data && response.data.length > 0) {
+                    const convenio = response.data[0];
+                    return parseResponseToDTO(convenio, convenio.orgao.codigoSIAFI);
+                }
+
+                return null;
+
+            } catch (error: any) {
+                console.error(error.name, error.message);
+                this.portalAPILogger.error(`Erro ao buscar convênio pelo número: ${code} com APIKEY: ${RANDOMAPIKEY} - Erro: ${error.message}`, "PortalAPI");
+                throw error;
+            }
+        });
     }
 
 }
 
-const parseResponseToDTO = (response: any[], ifesCode: string): ConvenioDTO[] => {
-    let convenios: ConvenioDTO[] = [];
+const parseResponseToDTO = (convenio: any, ifesCode: string): ConvenioDTO | null => {
 
-    response.forEach((element: any) => {
-        const detailConvenioUrlTemplate = `https://portaldatransparencia.gov.br/convenios/${element.dimConvenio.codigo}`;
+    const detailConvenioUrlTemplate = `https://portaldatransparencia.gov.br/convenios/${convenio.dimConvenio.codigo}`;
+    const cnpjDesformatado = convenio.convenente.cnpjFormatado.replace(/\D/g, '');
+    const convenenteNome = convenio.convenente.nome.toLowerCase().replace(/[\s\W]+/g, '-');
+    const detailDestinationUrlTemplate = `https://portaldatransparencia.gov.br/pessoa-juridica/${cnpjDesformatado}-${convenenteNome}`;
+    let convenente = new ConvenenteDTO({ name: convenio.convenente.nome.toLowerCase(), type: convenio.convenente.tipo.toLowerCase(), detailUrl: detailDestinationUrlTemplate });
 
-        const cnpjDesformatado = element.convenente.cnpjFormatado.replace(/\D/g, '');
-        const convenenteNome = element.convenente.nome.toLowerCase().replace(/[\s\W]+/g, '-');
-        const detailDestinationUrlTemplate = `https://portaldatransparencia.gov.br/pessoa-juridica/${cnpjDesformatado}-${convenenteNome}`;
-        let convenente = new ConvenenteDTO({ name: element.convenente.nome.toLowerCase(), type: element.convenente.tipo.toLowerCase(), detailUrl: detailDestinationUrlTemplate });
-
-        let convenio = new ConvenioDTO({
-            detailUrl: detailConvenioUrlTemplate,
-            ifesCode: ifesCode,
-            number: element.dimConvenio.codigo,
-            description: element.dimConvenio.objeto,
-            origin: element.unidadeGestora.orgaoVinculado.nome,
-            totalValueReleased: element.valorLiberado,
-            startEffectiveDate: new Date(element.dataInicioVigencia),
-            endEffectiveDate: new Date(element.dataFinalVigencia),
-            lastReleaseDate: new Date(element.dataUltimaLiberacao),
-            valueLastRelease: element.valorDaUltimaLiberacao,
-            totalValue: element.valor,
-            convenente: convenente,
-        });
-        convenios.push(convenio);
+    return new ConvenioDTO({
+        detailUrl: detailConvenioUrlTemplate,
+        ifesCode: ifesCode,
+        number: convenio.dimConvenio.codigo,
+        description: convenio.dimConvenio.objeto,
+        origin: convenio.unidadeGestora.orgaoVinculado.nome,
+        totalValueReleased: convenio.valorLiberado,
+        startEffectiveDate: new Date(convenio.dataInicioVigencia),
+        endEffectiveDate: new Date(convenio.dataFinalVigencia),
+        lastReleaseDate: new Date(convenio.dataUltimaLiberacao),
+        valueLastRelease: convenio.valorDaUltimaLiberacao,
+        totalValue: convenio.valor,
+        convenente: convenente,
     });
 
-    console.log("Encontrados ", convenios.length, " convenios da ife: ", ifesCode);
-    return convenios;
 }
 

@@ -16,7 +16,7 @@ let app = express();
 
 // Propriedades Servidor
 const PORT: number = parseInt(process.env.PORT || '3001');
-const HOSTNAME: string = process.env.HOST || 'localhost';
+const HOSTNAME: string = process.env.HOST || '0.0.0.0';
 
 // Configuração servidor
 app.use(express.urlencoded({ extended: true }));
