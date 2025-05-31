@@ -12,7 +12,7 @@ export default class ConveniosService {
     static async getAllConvenios() {
         const convenios = await ConveniosRepository.getAll();
         if (!convenios) {
-            throw new NotFoundError("Convenios não encontrados, tente novamente mais tarde", "Não foi encontrado nenhum convênio com este número" + number);
+            throw new NotFoundError("Convenios não encontrados, tente novamente mais tarde", "Não foi encontrado nenhum convênio");
         }
         return convenios;
     }
