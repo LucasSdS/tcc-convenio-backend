@@ -20,7 +20,7 @@ export default class ConvenentesService {
                     return {
                         convenenteId: convenentePartial.convenenteId,
                         name: convenenteEncontrado.name,
-                        totalValueReleased: Number(Number(convenentePartial.totalValueReleased).toFixed(2)),
+                        totalValueReleased: Number(convenentePartial.totalValueReleased),
                         detailUrl: convenenteEncontrado.detailUrl,
                         ifes: {
                             code: convenio.ifesCode,
