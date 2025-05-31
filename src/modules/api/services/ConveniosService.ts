@@ -14,6 +14,7 @@ export default class ConveniosService {
         if (!convenios) {
             throw new NotFoundError("Convenios não encontrados, tente novamente mais tarde", "Não foi encontrado nenhum convênio");
         }
+        return convenios;
     }
 
     static async getConveniosByNumber(number: string) {
