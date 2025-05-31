@@ -103,7 +103,7 @@ export default class IfesService {
                 return {
                     name: convenente.name,
                     detailUrl: convenente.detailUrl,
-                    totalValueReleased: parseFloat(convenente.totalValueReleased.toFixed(2))
+                    totalValueReleased: Number(Number(convenente.totalValueReleased).toFixed(2))
                 }
             });
 
@@ -111,7 +111,7 @@ export default class IfesService {
 
             const ifesTotalValueReleased = ifesRankingPartial.find(ifesPartial => {
                 if (ifesPartial.code === ifes.code) {
-                    return parseFloat(ifesPartial.totalValueReleased.toFixed(2));
+                    return Number(Number(ifesPartial.totalValueReleased).toFixed(2));
                 }
             });
 
