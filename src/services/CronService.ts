@@ -8,11 +8,11 @@ export default class CronService {
     static schedule(): void {
         this.cronLogger.info("Iniciando o JOB de atualização de todos os convênios para às 00 até as 06", "cronService");
         console.log("Agendando rotina do JOB para às 00 até as 06");
-        cron.schedule('*/30 02-06 * * *', () => CronService.executeJob(), { timezone: "America/Sao_Paulo" });
+        cron.schedule(process.env.CRON_UPDATE_CONVENIOS_ALL || "0 * * * *", () => CronService.executeJob(), { timezone: "America/Sao_Paulo" });
         
         this.cronLogger.info("Iniciando o JOB de atualização de todos os convênios TRUNCADOS para às 00 até as 06 a cada 30 minutos", "cronService");
         console.log("Iniciando o JOB de atualização de todos os convênios TRUNCADOS para às 00 até as 06 a cada 30 minutos");
-        cron.schedule('*/30 * * * *', () => CronService.executeUpdateAllConveniosPotentiallyTruncated(), { timezone: "America/Sao_Paulo" });
+        cron.schedule(process.env.CRON_UPDATE_CONVENIOS_TRUNCATED || "30 * * * *", () => CronService.executeUpdateAllConveniosPotentiallyTruncated(), { timezone: "America/Sao_Paulo" });
     }
 
     static async executeJob(): Promise<void> {

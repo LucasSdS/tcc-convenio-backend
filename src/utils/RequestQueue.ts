@@ -5,7 +5,7 @@ export class RequestQueue {
     private processing: boolean = false;
     private rateLimitMS: number;
 
-    constructor(rateLimitMS: number = 200){
+    constructor(rateLimitMS: number = 300){
         this.rateLimitMS = rateLimitMS;    
     }
 
@@ -34,4 +34,4 @@ export class RequestQueue {
     }
 }
 
-export const apiQueue = new RequestQueue(200);
+export const apiQueue = new RequestQueue();
