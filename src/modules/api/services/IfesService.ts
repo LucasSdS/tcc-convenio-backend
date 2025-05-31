@@ -88,12 +88,12 @@ export default class IfesService {
                 if (convenio.convenente) {
                     let convenenteExiste = convenentesAgrupados.find(convenente => convenente.name === convenio.convenente.name);
                     if (convenenteExiste) {
-                        convenenteExiste.totalValueReleased += convenio.totalValueReleased || 0;
+                        convenenteExiste.totalValueReleased += Number(convenio.totalValueReleased) || 0;
                     } else {
                         convenentesAgrupados.push({
                             name: convenio.convenente.name,
                             detailUrl: convenio.convenente.detailUrl,
-                            totalValueReleased: convenio.totalValueReleased
+                            totalValueReleased: Number(convenio.totalValueReleased)
                         });
                     }
                 }
@@ -103,27 +103,27 @@ export default class IfesService {
                 return {
                     name: convenente.name,
                     detailUrl: convenente.detailUrl,
-                    totalValueReleased: Number(Number(convenente.totalValueReleased).toFixed(2))
+                    totalValueReleased: Number(convenente.totalValueReleased)
                 }
             });
 
-            const convenentesAgrupadosFormatadosOrdenados = convenentesAgrupadosFormatados.sort((a, b) => (b.totalValueReleased ?? 0) - (a.totalValueReleased ?? 0));
+            const convenentesAgrupadosFormatadosOrdenados = convenentesAgrupadosFormatados.sort((a, b) => (Number(b.totalValueReleased) ?? 0) - (Number(a.totalValueReleased) ?? 0));
 
             const ifesTotalValueReleased = ifesRankingPartial.find(ifesPartial => {
                 if (ifesPartial.code === ifes.code) {
-                    return Number(Number(ifesPartial.totalValueReleased).toFixed(2));
+                    return Number(ifesPartial.totalValueReleased);
                 }
             });
 
             return {
                 code: ifes.code,
                 name: ifes.name,
-                totalValueReleased: ifesTotalValueReleased?.totalValueReleased,
+                totalValueReleased: Number(ifesTotalValueReleased?.totalValueReleased),
                 convenentes: convenentesAgrupadosFormatadosOrdenados
             }
         });
 
-        const groupConvenentesByConveniosSorted = groupConvenentesByConvenios.sort((a, b) => (b.totalValueReleased ?? 0) - (a.totalValueReleased ?? 0));
+        const groupConvenentesByConveniosSorted = groupConvenentesByConvenios.sort((a, b) => (Number(b.totalValueReleased) ?? 0) - (Number(a.totalValueReleased) ?? 0));
 
         return IfesRankingDTO.fromPartialIfesRankingEntities(groupConvenentesByConveniosSorted);
     }
