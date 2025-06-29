@@ -1,5 +1,5 @@
 import InternalServerError from "../errors/InternalServerError";
-import ConvenioHistory from "../models/ConvenioHistory";
+import ConvenioHistory from "../domain/ConvenioHistory";
 
 export default class ConvenioHistoryRepository {
 

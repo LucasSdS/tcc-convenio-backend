@@ -3,13 +3,13 @@ import * as dotenv from "dotenv";
 import PortalAPIRouter from "./routes/PortalAPIRouter";
 import IfesRouter from "./routes/IfesRouter";
 import sequelize from "../database/postgresqlConfig";
-import { enableCors } from "./routes/middlewares/cors";
+import { enableCors } from "./middlewares/cors";
 import ConvenioRouter from "./routes/ConvenioRouter";
-import createAssociationsModels from "./models/Associations";
-import IfesController from "./modules/api/controller/IfesController";
+import createAssociationsModels from "./domain/Associations";
+import IfesController from "./controllers/IfesController";
 import CronService from "./services/CronService";
 import { specs, swaggerUi } from "./config/SwaggerConfig";
-import { notFoundHandler } from "./routes/middlewares/notFound";
+import { notFoundHandler } from "./middlewares/notFound";
 
 dotenv.config();
 let app = express();

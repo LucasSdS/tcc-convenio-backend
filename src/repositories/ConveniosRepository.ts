@@ -1,9 +1,9 @@
 import ConvenioDTO from "../dto/Convenio";
-import Convenente from "../models/Convenente";
-import Convenio from "../models/Convenio";
+import Convenente from "../domain/Convenente";
+import Convenio from "../domain/Convenio";
 import { col, fn, Op, Transaction } from "sequelize";
 import ConvenioHistoryRepository from "./ConvenioHistoryRepository";
-import Ifes from "../models/Ifes";
+import Ifes from "../domain/Ifes";
 import InternalServerError from "../errors/InternalServerError";
 import NotFoundError from "../errors/NotFoundError";
 import { logger } from "../utils/ContextLogger";

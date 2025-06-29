@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import IfesService from "../services/IfesService";
-import HandleErrors from "../../../errors/HandleErrors";
+import HandleErrors from "../errors/HandleErrors";
 
 export default class IfesController {
     static async createIfesByIfesJsonList() {

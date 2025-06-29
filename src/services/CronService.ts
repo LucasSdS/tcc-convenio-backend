@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import ConveniosService from "../modules/client-api-portal/service/ConveniosService";
+import ConveniosService from "./PortalConveniosService";
 import { logger } from "../utils/ContextLogger";
 
 export default class CronService {

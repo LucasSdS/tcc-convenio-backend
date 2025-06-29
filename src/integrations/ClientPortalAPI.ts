@@ -1,9 +1,9 @@
 import axios from "axios";
-import ConvenioDTO from "../../../dto/Convenio";
-import ConvenenteDTO from "../../../dto/Convenente";
-import { logger } from "../../../utils/ContextLogger";
-import { apiQueue } from "../../../utils/RequestQueue";
-import { getApiKey } from "../../../utils/ApiKey";
+import ConvenioDTO from "../dto/Convenio";
+import ConvenenteDTO from "../dto/Convenente";
+import { logger } from "../utils/ContextLogger";
+import { apiQueue } from "../utils/RequestQueue";
+import { getApiKey } from "../utils/ApiKey";
 
 export default class PortalAPI {
     public static portalAPILogger = logger.createContextLogger("PortalAPI");

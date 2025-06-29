@@ -1,5 +1,5 @@
-import ConvenenteRepository from "../../../repositories/ConvenenteRepository";
-import ConvenentesRankingDTO from "../dtos/ConvenentesRanking";
+import ConvenenteRepository from "../repositories/ConvenenteRepository";
+import ConvenentesRankingDTO from "../dto/ConvenentesRanking";
 
 export default class ConvenentesService {
 

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import ConveniosService from "../service/ConveniosService";
-import HandleErrors from "../../../errors/HandleErrors";
+import ConveniosService from "../services/PortalConveniosService";
+import HandleErrors from "../errors/HandleErrors";
 
 export default class PortalAPIController {
 

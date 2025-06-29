@@ -1,6 +1,6 @@
 import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import sequelize from "../../database/postgresqlConfig";
-import Convenio from "./Convenio";
+import Convenio from "../domain/Convenio";
 
 class Ifes extends Model<InferAttributes<Ifes>, InferCreationAttributes<Ifes>> {
     declare id?: number;

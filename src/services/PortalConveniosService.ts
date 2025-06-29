@@ -1,13 +1,13 @@
 import { Transaction } from "sequelize";
-import sequelize from "../../../../database/postgresqlConfig";
-import ConvenioDTO from "../../../dto/Convenio";
-import ConveniosRepository from "../../../repositories/ConveniosRepository";
-import PortalAPI from "./ClientPortalAPI";
-import ConvenenteService from "./ConvenenteService";
-import IfesService from "../../api/services/IfesService";
-import { logger } from "../../../utils/ContextLogger";
+import sequelize from "../../database/postgresqlConfig";
+import ConvenioDTO from "../dto/Convenio";
+import ConveniosRepository from "../repositories/ConveniosRepository";
+import PortalAPI from "../integrations/ClientPortalAPI";
+import ConvenenteService from "./PortalConvenentesService";
+import IfesService from "./IfesService";
+import { logger } from "../utils/ContextLogger";
 
-export default class ConveniosService {
+export default class PortalConveniosService {
     private static conveniosServiceLogger = logger.createContextLogger("ConveniosServiceLog");
 
     static async updateAllConvenios() {
@@ -63,7 +63,7 @@ export default class ConveniosService {
                 }
 
                 convenioDTO.convenenteId = convenenteId;
-                await ConveniosService.createOrUpdate(convenioDTO, transaction);
+                await PortalConveniosService.createOrUpdate(convenioDTO, transaction);
 
                 await transaction.commit();
             } catch (error: any) {
@@ -81,9 +81,9 @@ export default class ConveniosService {
 
             if (!convenioExists){
                 convenioToPersist.isPotentiallyTruncated = 
-                    ConveniosService.isValueUnder10k(convenioToPersist.totalValueReleased) ||
-                    ConveniosService.isValueUnder10k(convenioToPersist.valueLastRelease) ||
-                    ConveniosService.isValueUnder10k(convenioToPersist.totalValue);
+                    PortalConveniosService.isValueUnder10k(convenioToPersist.totalValueReleased) ||
+                    PortalConveniosService.isValueUnder10k(convenioToPersist.valueLastRelease) ||
+                    PortalConveniosService.isValueUnder10k(convenioToPersist.totalValue);
 
                 const convenioCreated = await ConveniosRepository.create(convenioToPersist, transaction!);
                 this.conveniosServiceLogger.info(`Convenio criado com sucesso: ${JSON.stringify(convenioCreated)}`, "ConveniosServiceLog");
@@ -131,7 +131,7 @@ export default class ConveniosService {
                 return;
             }
 
-            const convenioCreatedOrUpdated = await ConveniosService.createOrUpdate(convenioDTO, transaction);
+            const convenioCreatedOrUpdated = await PortalConveniosService.createOrUpdate(convenioDTO, transaction);
             await transaction.commit();
             return convenioCreatedOrUpdated;
         } catch (error: any) {

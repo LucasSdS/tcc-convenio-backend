@@ -1,4 +1,4 @@
-import Convenio from "../models/Convenio";
+import Convenio from "../domain/Convenio";
 import { getTimestamp } from "../utils/DateUtils";
 import ConvenenteDTO from "./Convenente";
 

@@ -1,4 +1,4 @@
-import Convenente from "../models/Convenente";
+import Convenente from "../domain/Convenente";
 
 /**
  * @swagger

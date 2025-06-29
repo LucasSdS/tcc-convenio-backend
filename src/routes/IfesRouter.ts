@@ -1,5 +1,5 @@
 import { Router } from "express";
-import IfesController from "../modules/api/controller/IfesController";
+import IfesController from "../controllers/IfesController";
 
 const router: Router = Router();
 
