@@ -1,5 +1,5 @@
 import { Router } from "express";
-import PortalAPIController from "../modules/client-api-portal/controller/PortalAPIController";
+import PortalAPIController from "../controllers/PortalAPIController";
 
 const router: Router = Router();
 /**

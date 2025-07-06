@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-import mongoose from "../../database/mongodbConfig";
+import mongoose from "../config/mongodbConfig";
 
 interface IChangeLog  {
     id?: string;

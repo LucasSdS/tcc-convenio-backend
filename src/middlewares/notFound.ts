@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import ErrorDTO from "../../dto/Error";
+import ErrorDTO from "../dto/Error";
 
 /**
  * Middleware para lidar com rotas não encontradas (404)

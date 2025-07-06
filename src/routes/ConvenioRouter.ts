@@ -1,5 +1,5 @@
 import { Router } from "express";
-import ConvenioController from "../modules/api/controller/ConvenioController";
+import ConvenioController from "../controllers/ConvenioController";
 
 const router: Router = Router();
 

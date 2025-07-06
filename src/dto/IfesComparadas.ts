@@ -1,4 +1,4 @@
-import ConvenioDTO from "../../../dto/Convenio";
+import ConvenioDTO from "../dto/Convenio";
 
 
 /**

@@ -1,13 +1,15 @@
 import { Transaction } from "sequelize";
-import sequelize from "../../../../database/postgresqlConfig";
-import ConvenioDTO from "../../../dto/Convenio";
-import ConveniosRepository from "../../../repositories/ConveniosRepository";
-import PortalAPI from "./ClientPortalAPI";
-import ConvenenteService from "./ConvenenteService";
-import IfesService from "../../api/services/IfesService";
-import { logger } from "../../../utils/ContextLogger";
+import sequelize from "../config/postgresqlConfig";
+import ConvenioDTO from "../dto/Convenio";
+import ConveniosRepository from "../repositories/ConveniosRepository";
+import PortalAPI from "../integrations/ClientPortalAPI";
+import ConvenenteService from "./PortalConvenentesService";
+import IfesService from "./IfesService";
+import { logger } from "../utils/ContextLogger";
+import { ChangeLogRepository } from "../repositories/ChangeLogRepository";
+import ChangeLogDTO from "../dto/ChangeLog";
 
-export default class ConveniosService {
+export default class PortalConveniosService {
     private static conveniosServiceLogger = logger.createContextLogger("ConveniosServiceLog");
 
     static async updateAllConvenios() {
@@ -63,7 +65,7 @@ export default class ConveniosService {
                 }
 
                 convenioDTO.convenenteId = convenenteId;
-                await ConveniosService.createOrUpdate(convenioDTO, transaction);
+                await PortalConveniosService.createOrUpdate(convenioDTO, transaction);
 
                 await transaction.commit();
             } catch (error: any) {
@@ -81,9 +83,9 @@ export default class ConveniosService {
 
             if (!convenioExists){
                 convenioToPersist.isPotentiallyTruncated = 
-                    ConveniosService.isValueUnder10k(convenioToPersist.totalValueReleased) ||
-                    ConveniosService.isValueUnder10k(convenioToPersist.valueLastRelease) ||
-                    ConveniosService.isValueUnder10k(convenioToPersist.totalValue);
+                    PortalConveniosService.isValueUnder10k(convenioToPersist.totalValueReleased) ||
+                    PortalConveniosService.isValueUnder10k(convenioToPersist.valueLastRelease) ||
+                    PortalConveniosService.isValueUnder10k(convenioToPersist.totalValue);
 
                 const convenioCreated = await ConveniosRepository.create(convenioToPersist, transaction!);
                 this.conveniosServiceLogger.info(`Convenio criado com sucesso: ${JSON.stringify(convenioCreated)}`, "ConveniosServiceLog");
@@ -98,6 +100,8 @@ export default class ConveniosService {
 
             const [newValue, oldValue, isPotentiallyTruncated] = convenioToPersist.getDiff(convenioExistsDTO!);
 
+            const diffKeys = convenioToPersist.getDiffKeys(convenioExistsDTO!);
+
             if (Object.keys(newValue).length === 0) {
                 return convenioExists;
             }
@@ -109,6 +113,10 @@ export default class ConveniosService {
             convenioExists.isPotentiallyTruncated = isPotentiallyTruncated;
 
             const convenioUpdated = await ConveniosRepository.update(convenioExists, oldValue, newValue, transaction!);
+
+            const changeLog = ChangeLogDTO.generateChangeLogDTOByDiff(convenioToPersist, convenioExistsDTO!, diffKeys)
+
+            await ChangeLogRepository.createLogEntry(changeLog);
 
             this.conveniosServiceLogger.info(`Convenio atualizado com sucesso: ${JSON.stringify(convenioUpdated)}`, "ConveniosServiceLog");
 
@@ -131,7 +139,7 @@ export default class ConveniosService {
                 return;
             }
 
-            const convenioCreatedOrUpdated = await ConveniosService.createOrUpdate(convenioDTO, transaction);
+            const convenioCreatedOrUpdated = await PortalConveniosService.createOrUpdate(convenioDTO, transaction);
             await transaction.commit();
             return convenioCreatedOrUpdated;
         } catch (error: any) {
@@ -194,6 +202,16 @@ export default class ConveniosService {
                     updatedConvenios.push(convenioUpdated);
                     this.conveniosServiceLogger.info(`Convenio atualizado com sucesso: ${JSON.stringify(convenioUpdated)}`, "ConveniosServiceLog");
                     await transaction.commit();
+                    try {
+                      const diffKeys = convenioDTO.getDiffKeys(convenioPersistedDTO!);
+                      const changeLog = ChangeLogDTO.generateChangeLogDTOByDiff(convenioDTO, convenioPersistedDTO!, diffKeys)
+                      await ChangeLogRepository.createLogEntry(changeLog);
+                    } catch(error: any) {
+                      console.log("[CONVENIOS_SERVICE] Erro ao tentar atualizar convenio potencialmente truncado");
+                      this.conveniosServiceLogger.error(`Erro ao tentar criar changelog para o convenio: ${convenioPersisted.number} \nErro: ${error.message}`, "ConveniosServiceLog");
+                      console.log(error.name, error.message);
+                    }
+                    
                 }catch (error: any) {
                     console.log("[CONVENIOS_SERVICE] Erro ao tentar atualizar convenio potencialmente truncado");
                     this.conveniosServiceLogger.error(`Erro ao tentar atualizar convenio potencialmente truncado: ${convenioPersisted.number} \nErro: ${error.message}`, "ConveniosServiceLog");

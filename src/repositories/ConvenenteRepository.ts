@@ -1,10 +1,10 @@
 import { Transaction } from "sequelize";
-import sequelize from "../../database/postgresqlConfig";
+import sequelize from "../config/postgresqlConfig";
 import ConvenenteDTO from "../dto/Convenente";
-import Convenente from "../models/Convenente";
+import Convenente from "../domain/Convenente";
 import { Op } from "sequelize";
-import Convenio from "../models/Convenio";
-import Ifes from "../models/Ifes";
+import Convenio from "../domain/Convenio";
+import Ifes from "../domain/Ifes";
 import InternalServerError from "../errors/InternalServerError";
 
 export default class ConvenenteRepository {

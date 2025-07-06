@@ -1,9 +1,9 @@
-import Ifes from "../models/Ifes";
+import Ifes from "../domain/Ifes";
 import IfesDTO from "../dto/Ifes";
-import sequelize from "../../database/postgresqlConfig";
-import Convenio from "../models/Convenio";
+import sequelize from "../config/postgresqlConfig";
+import Convenio from "../domain/Convenio";
 import { Op } from "sequelize";
-import Convenente from "../models/Convenente";
+import Convenente from "../domain/Convenente";
 import InternalServerError from "../errors/InternalServerError";
 import NotFoundError from "../errors/NotFoundError";
 

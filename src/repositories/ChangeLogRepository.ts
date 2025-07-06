@@ -1,4 +1,4 @@
-import ChangeLog from "../models/ChangeLog";
+import ChangeLog from "../domain/ChangeLog";
 import ChangeLogDTO from "../dto/ChangeLog";
 
 export class ChangeLogRepository {

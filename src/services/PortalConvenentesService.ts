@@ -1,5 +1,5 @@
 import { Transaction } from "sequelize";
-import ConvenenteRepository from "../../../repositories/ConvenenteRepository";
+import ConvenenteRepository from "../repositories/ConvenenteRepository";
 
 export default class ConvenenteService {
 

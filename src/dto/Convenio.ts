@@ -1,12 +1,8 @@
-import Convenio from "../models/Convenio";
+import Convenio from "../domain/Convenio";
 import { getTimestamp } from "../utils/DateUtils";
 import ConvenenteDTO from "./Convenente";
 
-const dateKeys = [
-  "startEffectiveDate",
-  "endEffectiveDate",
-  "lastReleaseDate"
-];
+const dateKeys = ["startEffectiveDate", "endEffectiveDate", "lastReleaseDate"];
 
 const keys = [
   "ifesCode",
@@ -120,7 +116,6 @@ export default class ConvenioDTO {
     this.isPotentiallyTruncated = data.isPotentiallyTruncated || false;
   }
 
-
   static fromEntity(convenio: Convenio | null): ConvenioDTO | null {
     if (!convenio) {
       return null;
@@ -140,7 +135,7 @@ export default class ConvenioDTO {
       totalValue: Number(convenio.totalValue),
       convenenteId: convenio.convenenteId,
       convenente: convenio.convenente ? convenio.convenente : null,
-      isPotentiallyTruncated: convenio.isPotentiallyTruncated || false
+      isPotentiallyTruncated: convenio.isPotentiallyTruncated || false,
     });
   }
 
@@ -170,7 +165,10 @@ export default class ConvenioDTO {
   equals(convenioCompare: ConvenioDTO): boolean {
     for (const key of keys) {
       if (dateKeys.includes(key)) {
-        if (getTimestamp((this as any)[key]) !== getTimestamp((convenioCompare as any)[key])) {
+        if (
+          getTimestamp((this as any)[key]) !==
+          getTimestamp((convenioCompare as any)[key])
+        ) {
           return false;
         }
       } else {
@@ -182,7 +180,9 @@ export default class ConvenioDTO {
     return true;
   }
 
-  getDiff(convenioAntigo: ConvenioDTO): [{ [key: string]: any }, { [key: string]: any }, boolean] {
+  getDiff(
+    convenioAntigo: ConvenioDTO,
+  ): [{ [key: string]: any }, { [key: string]: any }, boolean] {
     const oldValues: { [key: string]: any } = {};
     const newValues: { [key: string]: any } = {};
     let isPotentiallyTruncated = false;
@@ -207,7 +207,8 @@ export default class ConvenioDTO {
     // - Só atualiza totalValue se o antigo estava truncado (< 10000) e o novo não está
     if (
       "totalValue" in oldValues &&
-      (convenioAntigo.totalValue > 0 && convenioAntigo.totalValue < 10000) &&
+      convenioAntigo.totalValue > 0 &&
+      convenioAntigo.totalValue < 10000 &&
       !(this.totalValue > 0 && this.totalValue < 10000)
     ) {
       // ok, mantém diferença
@@ -248,5 +249,18 @@ export default class ConvenioDTO {
     });
 
     return [newValues, oldValues, isPotentiallyTruncated];
+  }
+
+  getDiffKeys(
+    convenioCompare: ConvenioDTO,
+  ): string[] {
+    const diffKeys: string[] = [];
+
+    for (const key of keys) {
+      if ((this as any)[key] !== (convenioCompare as any)[key]) {
+        diffKeys.push(key);
+      }
+    }
+    return diffKeys;
   }
 }

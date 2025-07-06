@@ -1,13 +1,13 @@
 import IfesConveniosValidation from "../validations/CompareIfesConveniosValidation";
-import { buildDateOnly } from "../../../utils/DateUtils";
-import ConveniosRepository from "../../../repositories/ConveniosRepository";
-import ConvenioDTO from "../../../dto/Convenio";
-import IfesComparadasDTO from "../dtos/IfesComparadas";
-import IfesRepository from "../../../repositories/IfesRepository";
-import ifesList from "../../../ifes.json";
-import IfesRankingDTO from "../dtos/IfesRanking";
-import BadRequestError from "../../../errors/BadRequestError";
-import NotFoundError from "../../../errors/NotFoundError";
+import { buildDateOnly } from "../utils/DateUtils";
+import ConveniosRepository from "../repositories/ConveniosRepository";
+import ConvenioDTO from "../dto/Convenio";
+import IfesComparadasDTO from "../dto/IfesComparadas";
+import IfesRepository from "../repositories/IfesRepository";
+import ifesList from "../ifes.json";
+import IfesRankingDTO from "../dto/IfesRanking";
+import BadRequestError from "../errors/BadRequestError";
+import NotFoundError from "../errors/NotFoundError";
 
 export default class IfesService {
     static async getAllIfes() {

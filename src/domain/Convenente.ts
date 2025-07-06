@@ -1,5 +1,5 @@
 import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
-import sequelize from "../../database/postgresqlConfig";
+import sequelize from "../config/postgresqlConfig";
 import Convenio from "./Convenio";
 
 class Convenente extends Model<InferAttributes<Convenente>, InferCreationAttributes<Convenente>> {
