@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../../database/postgresqlConfig";
+import sequelize from "../config/postgresqlConfig";
 
 interface ConvenioHistoryAttributes {
     id?: number;

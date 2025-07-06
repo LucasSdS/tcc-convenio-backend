@@ -1,4 +1,4 @@
-import BadRequestError from "../../../errors/BadRequestError";
+import BadRequestError from "../errors/BadRequestError";
 
 export default class DataValidations {
 

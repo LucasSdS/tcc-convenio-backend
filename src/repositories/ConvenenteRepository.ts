@@ -1,5 +1,5 @@
 import { Transaction } from "sequelize";
-import sequelize from "../../database/postgresqlConfig";
+import sequelize from "../config/postgresqlConfig";
 import ConvenenteDTO from "../dto/Convenente";
 import Convenente from "../domain/Convenente";
 import { Op } from "sequelize";

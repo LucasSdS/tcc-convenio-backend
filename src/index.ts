@@ -2,7 +2,7 @@ import express from "express";
 import * as dotenv from "dotenv";
 import PortalAPIRouter from "./routes/PortalAPIRouter";
 import IfesRouter from "./routes/IfesRouter";
-import sequelize from "../database/postgresqlConfig";
+import sequelize from "./config/postgresqlConfig";
 import { enableCors } from "./middlewares/cors";
 import ConvenioRouter from "./routes/ConvenioRouter";
 import createAssociationsModels from "./domain/Associations";

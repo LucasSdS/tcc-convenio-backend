@@ -1,5 +1,5 @@
 import { Transaction } from "sequelize";
-import sequelize from "../../database/postgresqlConfig";
+import sequelize from "../config/postgresqlConfig";
 import ConvenioDTO from "../dto/Convenio";
 import ConveniosRepository from "../repositories/ConveniosRepository";
 import PortalAPI from "../integrations/ClientPortalAPI";

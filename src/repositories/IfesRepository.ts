@@ -1,6 +1,6 @@
 import Ifes from "../domain/Ifes";
 import IfesDTO from "../dto/Ifes";
-import sequelize from "../../database/postgresqlConfig";
+import sequelize from "../config/postgresqlConfig";
 import Convenio from "../domain/Convenio";
 import { Op } from "sequelize";
 import Convenente from "../domain/Convenente";
