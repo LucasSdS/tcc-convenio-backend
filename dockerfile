@@ -1,5 +1,5 @@
 #Build stage
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY . .
 RUN npm run build
 
 #Production stage
-FROM node:16-alpine AS production
+FROM node:22-alpine AS production
 
 ARG HOST
 ENV HOST=${HOST}
@@ -25,7 +25,11 @@ RUN npm ci --only=production
 
 COPY --from=build /app/dist ./dist
 
+USER root
+
 RUN mkdir -p /app/logs && chmod 755 /app/logs
+
+USER node
 
 VOLUME ["/app/logs"]
 

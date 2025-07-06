@@ -6,6 +6,8 @@ import PortalAPI from "../integrations/ClientPortalAPI";
 import ConvenenteService from "./PortalConvenentesService";
 import IfesService from "./IfesService";
 import { logger } from "../utils/ContextLogger";
+import { ChangeLogRepository } from "../repositories/ChangeLogRepository";
+import ChangeLogDTO from "../dto/ChangeLog";
 
 export default class PortalConveniosService {
     private static conveniosServiceLogger = logger.createContextLogger("ConveniosServiceLog");
@@ -98,6 +100,8 @@ export default class PortalConveniosService {
 
             const [newValue, oldValue, isPotentiallyTruncated] = convenioToPersist.getDiff(convenioExistsDTO!);
 
+            const diffKeys = convenioToPersist.getDiffKeys(convenioExistsDTO!);
+
             if (Object.keys(newValue).length === 0) {
                 return convenioExists;
             }
@@ -109,6 +113,10 @@ export default class PortalConveniosService {
             convenioExists.isPotentiallyTruncated = isPotentiallyTruncated;
 
             const convenioUpdated = await ConveniosRepository.update(convenioExists, oldValue, newValue, transaction!);
+
+            const changeLog = ChangeLogDTO.generateChangeLogDTOByDiff(convenioToPersist, convenioExistsDTO!, diffKeys)
+
+            await ChangeLogRepository.createLogEntry(changeLog);
 
             this.conveniosServiceLogger.info(`Convenio atualizado com sucesso: ${JSON.stringify(convenioUpdated)}`, "ConveniosServiceLog");
 
@@ -194,6 +202,16 @@ export default class PortalConveniosService {
                     updatedConvenios.push(convenioUpdated);
                     this.conveniosServiceLogger.info(`Convenio atualizado com sucesso: ${JSON.stringify(convenioUpdated)}`, "ConveniosServiceLog");
                     await transaction.commit();
+                    try {
+                      const diffKeys = convenioDTO.getDiffKeys(convenioPersistedDTO!);
+                      const changeLog = ChangeLogDTO.generateChangeLogDTOByDiff(convenioDTO, convenioPersistedDTO!, diffKeys)
+                      await ChangeLogRepository.createLogEntry(changeLog);
+                    } catch(error: any) {
+                      console.log("[CONVENIOS_SERVICE] Erro ao tentar atualizar convenio potencialmente truncado");
+                      this.conveniosServiceLogger.error(`Erro ao tentar criar changelog para o convenio: ${convenioPersisted.number} \nErro: ${error.message}`, "ConveniosServiceLog");
+                      console.log(error.name, error.message);
+                    }
+                    
                 }catch (error: any) {
                     console.log("[CONVENIOS_SERVICE] Erro ao tentar atualizar convenio potencialmente truncado");
                     this.conveniosServiceLogger.error(`Erro ao tentar atualizar convenio potencialmente truncado: ${convenioPersisted.number} \nErro: ${error.message}`, "ConveniosServiceLog");

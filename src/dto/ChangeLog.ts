@@ -52,15 +52,15 @@ export default class ChangeLogDTO {
   static generateChangeLogDTOByDiff(
     convenio1: ConvenioDTO,
     convenio2: ConvenioDTO,
-    diffKeys: Array<keyof typeof convenio1>,
+    diffKeys: string[],
   ): ChangeLogDTO {
     const changes: Object[] = [];
 
     diffKeys.forEach((key) => {
       changes.push({
         [key]: {
-          previousValue: convenio2[key],
-          newValue: convenio1[key],
+          previousValue: (convenio2 as any)[key],
+          newValue: (convenio1 as any)[key],
         },
       });
     });
