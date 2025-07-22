@@ -1,6 +1,5 @@
 {
   "ifes": [
-    { "code": "26269", "acronym": "UNIRIO", "name": "Universidade Federal do Estado do Rio de Janeiro" },
     { "code": "26352", "acronym": "UFABC", "name": "Fundação Universidade Federal do ABC" },
     { "code": "26275", "acronym": "FUFAC", "name": "Fundação Universidade Federal do Acre" },
     { "code": "26231", "acronym": "UFAL", "name": "Universidade Federal de Alagoas" },
@@ -55,6 +54,20 @@
     { "code": "26254", "acronym": "UFTM", "name": "Universidade Federal do Triângulo Mineiro" },
     { "code": "26274", "acronym": "FUFU", "name": "Fundação Universidade Federal de Uberlândia" },
     { "code": "26282", "acronym": "UFV", "name": "Universidade Federal de Viçosa" },
+    { "code": "26255", "acronym": "UFVJM", "name": "Universidade Federal dos Vales do Jequitinhonha e Mucuri" },
+    { "code": "26271", "acronym": "FUB", "name": "Fundação Universidade de Brasília" },
+    { "code": "26260", "acronym": "UNIFAL", "name": "Universidade Federal de Alfenas" },
+    { "code": "26286", "acronym": "FUFAP", "name": "Fundação Universidade Federal do Amapá" },
+    { "code": "26261", "acronym": "UNIFEI", "name": "Universidade Federal de Itajubá" },
+    { "code": "26262", "acronym": "UNIFESP", "name": "Universidade Federal de São Paulo" },
+    { "code": "26448", "acronym": "UNIFESSPA", "name": "Universidade Federal do Sul e Sudeste do Pará" },
+    { "code": "26267", "acronym": "UNILA", "name": "Universidade Federal da Integração Latino-Americana" },
+    { "code": "26442", "acronym": "UNILAB", "name": "Universidade da Integração Internacional da Lusofonia Afro-Brasileira" },
+    { "code": "26266", "acronym": "UNIPAMPA", "name": "Fundação Universidade Federal do Pampa" },
+    { "code": "26268", "acronym": "FUFRO", "name": "Fundação Universidade Federal de Rondônia" },
+    { "code": "26269", "acronym": "UNIRIO", "name": "Universidade Federal do Estado do Rio de Janeiro" },
+    { "code": "26230", "acronym": "UNIVASF", "name": "Fundação Universidade Federal do Vale do São Francisco" },
+    { "code": "26273", "acronym": "FURG", "name": "Universidade Federal do Rio Grande" },
     { "code": "26258", "acronym": "UTFPR", "name": "Universidade Tecnológica Federal do Paraná" }
   ]
 }
