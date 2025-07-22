@@ -230,7 +230,8 @@ export default class ConvenioDTO {
     // - Não atualiza se valueLastRelease diminuiu
     if (
       "valueLastRelease" in oldValues &&
-      this.valueLastRelease < convenioAntigo.valueLastRelease
+      (this.valueLastRelease !== convenioAntigo.valueLastRelease ||
+      this.valueLastRelease === convenioAntigo.valueLastRelease / 10000)
     ) {
       delete oldValues["valueLastRelease"];
       delete newValues["valueLastRelease"];
