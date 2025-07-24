@@ -1,10 +1,8 @@
 import RankingConveniosValidations from "../validations/RankingConveniosValidations";
 import { buildDateOnly } from "../utils/DateUtils";
-import IfesService from "./IfesService";
 import ConveniosRepository from "../repositories/ConveniosRepository";
 import IfesRankingDTO from "../dto/IfesRanking";
 import ConvenentesRankingDTO from "../dto/ConvenentesRanking";
-import ConvenentesService from "./ConvenentesService";
 import NotFoundError from "../errors/NotFoundError";
 
 export default class ConveniosService {
