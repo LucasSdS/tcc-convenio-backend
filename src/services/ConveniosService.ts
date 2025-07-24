@@ -118,24 +118,46 @@ export default class ConveniosService {
         const endYear = buildDateOnly(queryParams.endYear);
         const limit = queryParams.limit;
 
-        const ifesRankingPartial = await ConveniosService.getIfesCodeAndTotalValueReleasedFromConvenios(startYear, endYear, limit);
-        const ifesRankingDTO = await IfesService.getIfesRanking(ifesRankingPartial, startYear, endYear);
+        const [ifesRankingRaw, convenentesRankingRaw] = await Promise.all([
+            ConveniosRepository.getIfesRankingOptimizedRaw(startYear, endYear, limit),
+            ConveniosRepository.getConvenentesRankingOptimizedRaw(startYear, endYear, limit)
+        ]);
 
-        const convenentesRankingPartial = await ConveniosService.getConvenentesAndTotalValueReleasedFromConvenios(startYear, endYear, limit);
-        const convenentesRankingDTO = await ConvenentesService.getConvenentesRanking(convenentesRankingPartial, startYear, endYear);
+        const ifesCodes = ifesRankingRaw.map((ifes: any) => ifes.ifesCode);
+        const convenentesByIfes = await ConveniosRepository.getConvenentesByIfesRankingRaw(ifesCodes, startYear, endYear);
+
+        const ifesRankingDTO = ifesRankingRaw.map((ifes: any) => {
+            const convenentesDestaIfes = convenentesByIfes
+                .filter((conv: any) => conv.ifesCode === ifes.ifesCode)
+                .map((conv: any) => ({
+                    name: conv.convenenteName,
+                    detailUrl: conv.convenenteDetailUrl,
+                    totalValueReleased: Number(conv.totalValueReleased)
+                }))
+                .sort((a: any, b: any) => b.totalValueReleased - a.totalValueReleased);
+
+            return new IfesRankingDTO({
+                code: ifes.ifesCode,
+                name: ifes.ifesName,
+                totalValueReleased: Number(ifes.totalValueReleased),
+                convenentes: convenentesDestaIfes
+            });
+        });
+
+        const convenentesRankingDTO = convenentesRankingRaw.map((convenente: any) => {
+            return new ConvenentesRankingDTO({
+                convenenteId: convenente.convenenteId,
+                name: convenente.convenenteName,
+                totalValueReleased: Number(convenente.totalValueReleased),
+                detailUrl: convenente.convenenteDetailUrl,
+                ifes: {
+                    code: convenente.ifesCode,
+                    name: convenente.ifesName
+                }
+            });
+        });
 
         return { ifesRankingDTO, convenentesRankingDTO };
     }
 
-    static async getIfesCodeAndTotalValueReleasedFromConvenios(startYear: Date, endYear: Date, limit: number) {
-        return IfesRankingDTO.fromPartialIfesRankingEntities(
-            await ConveniosRepository.getIfesCodeAndTotalValueReleasedFromConvenios(startYear, endYear, limit)
-        );
-    }
-
-    static async getConvenentesAndTotalValueReleasedFromConvenios(startYear: Date, endYear: Date, limit: number) {
-        return ConvenentesRankingDTO.fromPartialConvenentesRankingEntities(
-            await ConveniosRepository.getConvenentesAndTotalValueReleasedFromConvenios(startYear, endYear, limit)
-        );
-    }
 }

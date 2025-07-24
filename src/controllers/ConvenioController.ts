@@ -22,10 +22,8 @@ export default class ConvenioController {
             limit: req.query?.limit
         }
 
-        console.log("Executando rankingConvenios", queryParams);
         try {
             const rankingConveniosResponse = await ConveniosService.generateConveniosRanking(queryParams);
-            console.log("Ranking Convenios finalizado com sucesso");
             res.status(200).json(rankingConveniosResponse);
 
         } catch (error: any) {
