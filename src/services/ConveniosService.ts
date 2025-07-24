@@ -8,13 +8,97 @@ import ConvenentesService from "./ConvenentesService";
 import NotFoundError from "../errors/NotFoundError";
 
 export default class ConveniosService {
+    static async getAllConvenios(options?: {
+        page?: number;
+        limit?: number;
+        sortBy?: string;
+        sortOrder?: 'ASC' | 'DESC';
+        filters?: Record<string, any>;
+        all?: boolean;
+    }) {
+        const {
+            page = 1,
+            limit = 10,
+            sortBy = 'lastReleaseDate',
+            sortOrder = 'DESC',
+            filters = {},
+            all = false
+        } = options || {};
 
-    static async getAllConvenios() {
-        const convenios = await ConveniosRepository.getAll();
-        if (!convenios) {
-            throw new NotFoundError("Convenios não encontrados, tente novamente mais tarde", "Não foi encontrado nenhum convênio");
+        const validFilters: Record<string, any> = {};
+        const allowedFilterFields = [
+            'description', 'origin', 'startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 
+            'totalValueReleased', 'valueLastRelease', 'totalValue',
+            'ifesAcronym', 'convenenteType'
+        ];
+        
+        Object.keys(filters).forEach(key => {
+            if (allowedFilterFields.includes(key) && filters[key] && filters[key] !== '') {
+                validFilters[key] = filters[key];
+            }
+        });
+
+        const sortableFields = [
+            'startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 
+            'totalValueReleased', 'valueLastRelease', 'totalValue', 'createdAt'
+        ];
+        const validSortBy = sortableFields.includes(sortBy) ? sortBy : 'lastReleaseDate';
+        const validSortOrder = (sortOrder === 'ASC' || sortOrder === 'DESC') ? sortOrder : 'DESC';
+
+        let result;
+
+        if (all) {
+            const repositoryOptions = {
+                sortBy: validSortBy,
+                sortOrder: validSortOrder,
+                filters: validFilters
+            };
+
+            const convenios = await ConveniosRepository.getAll(repositoryOptions);
+            if (!convenios || convenios.length === 0) {
+                throw new NotFoundError("Convenios não encontrados, tente novamente mais tarde", "Não foi encontrado nenhum convênio");
+            }
+
+            result = {
+                data: convenios,
+                metadata: {
+                    totalCount: convenios.length,
+                    limit: convenios.length,
+                    currentPage: 1,
+                    totalPages: 1,
+                    sortBy: validSortBy,
+                    sortOrder: validSortOrder,
+                }
+            };
+        } else {
+            const repositoryOptions = {
+                page,
+                limit,
+                sortBy: validSortBy,
+                sortOrder: validSortOrder,
+                filters: validFilters,
+                all: false
+            };
+
+            const repositoryResult = await ConveniosRepository.getAllWithPagination(repositoryOptions);
+            if (!repositoryResult.data || repositoryResult.data.length === 0) {
+                throw new NotFoundError("Convenios não encontrados, tente novamente mais tarde", "Não foi encontrado nenhum convênio");
+            }
+
+            result = {
+                data: repositoryResult.data,
+                metadata: {
+                    totalCount: repositoryResult.totalCount,
+                    limit: repositoryResult.limit,
+                    currentPage: repositoryResult.currentPage,
+                    totalPages: repositoryResult.totalPages,
+                    sortBy: repositoryResult.sortBy,
+                    sortOrder: repositoryResult.sortOrder,
+                }
+            };
         }
-        return convenios;
+
+        return result;
     }
 
     static async getConveniosByNumber(number: string) {

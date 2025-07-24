@@ -7,6 +7,7 @@ import Ifes from "../domain/Ifes";
 import InternalServerError from "../errors/InternalServerError";
 import NotFoundError from "../errors/NotFoundError";
 import { logger } from "../utils/ContextLogger";
+import ConvenioUIDTO from "../dto/ConvenioUIDTO";
 
 export default class ConveniosRepository {
     private static conveniosRepositoryLogger = logger.createContextLogger("ConveniosRepositoryLog");
@@ -154,23 +155,80 @@ export default class ConveniosRepository {
         }
     }
 
-    static async getAll() {
+    static async getAll(options?: {
+        sortBy?: string;
+        sortOrder?: 'ASC' | 'DESC';
+        filters?: Record<string, any>;
+    }) {
         try {
-            return await Convenio.findAll(
+            const {
+                sortBy = 'lastReleaseDate',
+                sortOrder = 'DESC',
+                filters = {}
+            } = options || {};
+
+            const whereConditions: any = {};
+            const includeConditions: any = [
                 {
-                    order: [['lastReleaseDate', 'DESC']],
-                    include: [
-                        {
-                            model: Convenente,
-                            as: "convenente"
-                        },
-                        {
-                            model: Ifes,
-                            as: "ifes"
-                        }
-                    ],
+                    model: Convenente,
+                    as: "convenente",
+                    where: {}
+                },
+                {
+                    model: Ifes,
+                    as: "ifes",
+                    where: {}
                 }
-            );
+            ];
+            
+            const textFields = ['description', 'origin'];
+            const dateAndValueFields = ['startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 'totalValueReleased', 'valueLastRelease', 'totalValue'];
+            
+            let hasIfesFilter = false;
+            let hasConvenenteFilter = false;
+
+            Object.keys(filters).forEach(key => {
+                if (filters[key] && filters[key] !== '') {
+                    if (textFields.includes(key)) {
+                        whereConditions[key] = {
+                            [Op.iLike]: `%${filters[key]}%`
+                        };
+                    } else if (dateAndValueFields.includes(key)) {
+                        whereConditions[key] = filters[key];
+                    } else if (key === 'ifesAcronym') {
+                        includeConditions[1].where = {
+                            acronym: {
+                                [Op.iLike]: `%${filters[key]}%`
+                            }
+                        };
+                        hasIfesFilter = true;
+                    } else if (key === 'convenenteType') {
+                        includeConditions[0].where = {
+                            type: {
+                                [Op.iLike]: `%${filters[key]}%`
+                            }
+                        };
+                        hasConvenenteFilter = true;
+                    }
+                }
+            });
+
+            if (!hasIfesFilter) {
+                delete includeConditions[1].where;
+            }
+            if (!hasConvenenteFilter) {
+                delete includeConditions[0].where;
+            }
+
+            const validSortBy = ['startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 'totalValueReleased', 'valueLastRelease', 'totalValue', 'createdAt'].includes(sortBy) ? sortBy : 'lastReleaseDate';
+
+            const convenioEntities = await Convenio.findAll({
+                where: whereConditions,
+                order: [[validSortBy, sortOrder]],
+                include: includeConditions
+            });
+
+            return ConvenioUIDTO.fromEntities(convenioEntities);
         } catch (error: any) {
             console.log("Ocorreu um erro ao buscar todos os convenios");
             this.conveniosRepositoryLogger.error(
@@ -178,6 +236,112 @@ export default class ConveniosRepository {
                 "ConveniosRepositoryLog"
             );
             throw new InternalServerError("Erro ao tentar buscar todos os convenios. Tente novamente mais tarde");
+        }
+    }
+
+    static async getAllWithPagination(options: {
+        page?: number;
+        limit?: number;
+        sortBy?: string;
+        sortOrder?: 'ASC' | 'DESC';
+        filters?: Record<string, any>;
+        all?: boolean;
+    }) {
+        try {
+            const {
+                page = 1,
+                limit = 10,
+                sortBy = 'lastReleaseDate',
+                sortOrder = 'DESC',
+                filters = {},
+                all = false
+            } = options;
+
+            const whereConditions: any = {};
+            const includeConditions: any = [
+                {
+                    model: Convenente,
+                    as: "convenente",
+                    where: {}
+                },
+                {
+                    model: Ifes,
+                    as: "ifes",
+                    where: {}
+                }
+            ];
+            
+            const textFields = ['description', 'origin'];
+            const dateAndValueFields = ['startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 'totalValueReleased', 'valueLastRelease', 'totalValue'];
+            
+            let hasIfesFilter = false;
+            let hasConvenenteFilter = false;
+
+            Object.keys(filters).forEach(key => {
+                if (filters[key] && filters[key] !== '') {
+                    if (textFields.includes(key)) {
+                        whereConditions[key] = {
+                            [Op.iLike]: `%${filters[key]}%`
+                        };
+                    } else if (dateAndValueFields.includes(key)) {
+                        whereConditions[key] = filters[key];
+                    } else if (key === 'ifesAcronym') {
+                        includeConditions[1].where = {
+                            acronym: {
+                                [Op.iLike]: `%${filters[key]}%`
+                            }
+                        };
+                        hasIfesFilter = true;
+                    } else if (key === 'convenenteType') {
+                        includeConditions[0].where = {
+                            type: {
+                                [Op.iLike]: `%${filters[key]}%`
+                            }
+                        };
+                        hasConvenenteFilter = true;
+                    }
+                }
+            });
+
+            if (!hasIfesFilter) {
+                delete includeConditions[1].where;
+            }
+            if (!hasConvenenteFilter) {
+                delete includeConditions[0].where;
+            }
+
+            const validSortBy = ['startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 'totalValueReleased', 'valueLastRelease', 'totalValue', 'createdAt'].includes(sortBy) ? sortBy : 'lastReleaseDate';
+
+            const queryOptions: any = {
+                where: whereConditions,
+                order: [[validSortBy, sortOrder]],
+                include: includeConditions
+            };
+
+            if (!all) {
+                queryOptions.offset = (page - 1) * limit;
+                queryOptions.limit = limit;
+            }
+
+            const { count, rows } = await Convenio.findAndCountAll(queryOptions);
+            const conveniosUIDTO = ConvenioUIDTO.fromEntities(rows);
+            
+            return {
+                data: conveniosUIDTO,
+                totalCount: count,
+                currentPage: page,
+                totalPages: all ? 1 : Math.ceil(count / limit),
+                limit: all ? count : limit,
+                sortBy: validSortBy,
+                sortOrder: sortOrder
+            };
+        } catch (error: any) {
+            console.log("Ocorreu um erro ao buscar convenios com paginação");
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar buscar convenios com paginação. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
+            throw new InternalServerError("Erro ao tentar buscar convenios com paginação. Tente novamente mais tarde");
         }
     }
 

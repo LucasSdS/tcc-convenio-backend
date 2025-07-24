@@ -35,8 +35,24 @@ export default class ConvenioController {
 
     static async getAllConvenios(req: Request, res: Response, next: NextFunction) {
         try {
-            const convenios = await ConveniosService.getAllConvenios();
-            res.status(200).json(convenios);
+            let { page = 1, limit = 10, sortBy = 'lastReleaseDate', sortOrder = 'DESC', all = false, ...filters } = req.query;
+            
+            const pageNumber = parseInt(page as string);
+            const limitNumber = parseInt(limit as string);
+            const allBoolean = (all as string) === 'true';
+            
+            const options = {
+                page: pageNumber,
+                limit: limitNumber,
+                sortBy: sortBy as string,
+                sortOrder: (sortOrder as string).toUpperCase() as 'ASC' | 'DESC',
+                filters,
+                all: allBoolean
+            };
+
+            const result = await ConveniosService.getAllConvenios(options);
+            res.status(200).json(result);
+            
         } catch (error: any) {
             HandleErrors.handleErrors(error, req, res, next);
         }
