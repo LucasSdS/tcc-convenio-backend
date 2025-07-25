@@ -158,4 +158,17 @@ export default class ConveniosService {
         return { ifesRankingDTO, convenentesRankingDTO };
     }
 
+    static async getDashboardStats() {
+        const [totalConvenios, totalConveniosActive, lastUpdatedDate] = await Promise.all([
+            ConveniosRepository.getTotalConvenios(),
+            ConveniosRepository.getTotalConveniosActive(),
+            ConveniosRepository.getLatestUpdatedConveniosDate()
+        ])
+
+        return {
+            totalConvenios,
+            totalConveniosActive,
+            lastUpdatedDate
+        }
+    }
 }

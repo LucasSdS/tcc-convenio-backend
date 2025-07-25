@@ -2,9 +2,10 @@ import express from "express";
 import * as dotenv from "dotenv";
 import PortalAPIRouter from "./routes/PortalAPIRouter";
 import IfesRouter from "./routes/IfesRouter";
+import ConvenioRouter from "./routes/ConvenioRouter";
+import DashboardRouter from "./routes/DashboardRouter";
 import sequelize from "./config/postgresqlConfig";
 import { enableCors } from "./middlewares/cors";
-import ConvenioRouter from "./routes/ConvenioRouter";
 import createAssociationsModels from "./domain/Associations";
 import IfesController from "./controllers/IfesController";
 import CronService from "./services/CronService";
@@ -33,6 +34,7 @@ app.use("/healthcheck", (req, res, next) => {
 app.use("/portal-api", PortalAPIRouter);
 app.use("/api", IfesRouter);
 app.use("/api", ConvenioRouter);
+app.use("/api", DashboardRouter);
 
 app.use(notFoundHandler);
 

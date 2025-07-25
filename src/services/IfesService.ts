@@ -10,6 +10,10 @@ import BadRequestError from "../errors/BadRequestError";
 import NotFoundError from "../errors/NotFoundError";
 
 export default class IfesService {
+    static async getIfesStats() {
+        return await IfesRepository.getTotalIfes();
+    }
+
     static async getAllIfes() {
         const allIfes = await IfesRepository.getAllIfes();
         if (!allIfes) {

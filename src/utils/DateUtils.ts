@@ -23,3 +23,17 @@ export const getTimestamp = (date: Date): number => {
     if (typeof date === 'string') return new Date(date).getTime();
     return 0;
 }
+
+/**
+ * Verifica qual das datas é a mais recente
+ * @param date1 primeira data
+ * @param date2 segunda data
+ * @returns a data mais recente
+ */
+export const getMostRecentDate = (date1: Date | null, date2: Date | null): Date => {
+    if (!date1 && !date2) return new Date(0);
+    if (!date1) return date2 as Date;
+    if (!date2) return date1;
+
+    return date1 > date2 ? date1 : date2;
+}

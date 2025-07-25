@@ -13,6 +13,63 @@ import sequelize from "../config/postgresqlConfig";
 export default class ConveniosRepository {
     private static conveniosRepositoryLogger = logger.createContextLogger("ConveniosRepositoryLog");
 
+    static async getLatestUpdatedConveniosDate() {
+        try {
+            const query = `
+                SELECT MAX("updatedAt") as "latestUpdate"
+                FROM "Convenios"
+                WHERE "updatedAt" IS NOT NULL;
+            `;
+            
+            const result = await sequelize.query(query, {
+                type: QueryTypes.SELECT,
+                raw: true
+            }) as [{ latestUpdate: Date | null }];
+            
+            return result[0]?.latestUpdate || null;
+        } catch(error: any){
+            console.error("Erro ao tentar buscar a data do último convênio atualizado", error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar buscar a data do último convênio atualizado. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
+            throw new InternalServerError("Erro ao tentar buscar a data do último convênio atualizado");
+        }
+    }
+
+    static async getTotalConvenios(){
+        try {
+            return await Convenio.count();
+        } catch(error: any) {
+            console.error("Erro ao tentar buscar o total de convênios", error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar buscar o total de convênios. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
+            throw new InternalServerError("Erro ao tentar buscar o total de convênios");
+        }
+    }
+
+    static async getTotalConveniosActive(){
+        try {
+            const currentDate = new Date();
+            return await Convenio.count({
+                where: {
+                    startEffectiveDate: { [Op.lte]: currentDate },
+                    endEffectiveDate: { [Op.gte]: currentDate }
+                }
+            });
+
+        } catch(error: any){
+            console.error("Erro ao tentar buscar o total de convênios ativos", error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar buscar o total de convênios ativos. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
+            throw new InternalServerError("Erro ao tentar buscar o total de convênios ativos");
+        }
+    }
+
     static async getConvenioByNumber(conveniosNumber: string): Promise<any> {
         try {
             let findConvenioEntity = await Convenio.findOne({

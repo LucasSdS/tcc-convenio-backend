@@ -8,6 +8,16 @@ import InternalServerError from "../errors/InternalServerError";
 import NotFoundError from "../errors/NotFoundError";
 
 export default class IfesRepository {
+
+    static async getTotalIfes(): Promise<number> {
+        try {
+            return await Ifes.count();
+        } catch (error: any) {
+            console.log(error.name, error.message);
+            throw new InternalServerError("Erro ao tentar buscar total de IFES. Tente novamente mais tarde");
+        }
+    }
+
     static async getAllIfes(): Promise<IfesDTO[]> {
         console.log(`Buscando todas as Ifes da tabela`);
         try {

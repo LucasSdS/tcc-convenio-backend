@@ -4,21 +4,39 @@ import IfesRankingDTO from "./IfesRanking";
  * @swagger
  * components:
  *   schemas:
+ *     ConvenentesRanking:
+ *       type: object
+ *       properties:
+ *         convenenteId:
+ *           type: integer
+ *           description: ID único do convenente
+ *         name:
+ *           type: string
+ *           description: Nome do convenente
+ *         totalValueReleased:
+ *           type: number
+ *           description: Valor total liberado para este convenente
+ *         detailUrl:
+ *           type: string
+ *           description: URL com detalhes do convenente
+ *         ifes:
+ *           $ref: '#/components/schemas/IfesRanking'
+ *       required:
+ *         - convenenteId
+ *         - name
+ *         - totalValueReleased
  *     Ifes:
  *       type: object
  *       properties:
  *         code:
  *           type: string
  *           description: Código identificador da Ifes
- *           example: "26234"
  *         acronym:
  *           type: string
  *           description: Sigla da Ifes
- *           example: "UFMG"
  *         name:
  *           type: string
  *           description: Nome completo da Ifes
- *           example: "Universidade Federal de Minas Gerais"
  *       required:
  *         - code
  *         - acronym

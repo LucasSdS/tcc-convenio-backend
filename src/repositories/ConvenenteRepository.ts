@@ -11,6 +11,31 @@ import { logger } from "../utils/ContextLogger";
 export default class ConvenenteRepository {
     private static convenenteRepositoryLogger = logger.createContextLogger("ConvenenteRepositoryLog");
 
+    static async getTotalConvenentes(){
+        try {  
+            return await Convenente.count();
+        } catch(error: any){
+            console.log(error.name, error.message);
+            this.convenenteRepositoryLogger.error("Erro ao buscar total de convenentes", error);
+            throw new InternalServerError("Erro ao tentar buscar total de convenentes. Tente novamente mais tarde");
+        }
+    }
+
+    static async getConvenenteTypes() {
+    try {
+        return await Convenente.findAll({
+            attributes: ['type'],
+            group: ['type'],
+            order: [['type', 'ASC']],
+            raw: true 
+        });
+    } catch (error: any) {
+        console.log(error.name, error.message);
+        this.convenenteRepositoryLogger.error("Erro ao buscar tipos de convenentes", error);
+        throw new InternalServerError("Erro ao tentar buscar tipos de convenentes. Tente novamente mais tarde");
+    }
+}
+
     static async getById(id: number) {
         try {
             return await Convenente.findByPk(id);

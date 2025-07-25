@@ -35,4 +35,16 @@ export default class ConvenentesService {
         return ConvenentesRankingDTO.fromPartialConvenentesRankingEntities(convenentesRankingDTOs);
     }
 
+    static async getConvenentesStats() {
+        const [totalConvenentes, convenentesTypes] = await Promise.all([
+            ConvenenteRepository.getTotalConvenentes(),
+            ConvenenteRepository.getConvenenteTypes()
+        ]);
+
+        return {
+            totalConvenentes,
+            convenentesTypes: convenentesTypes.map(type => type.type)
+        };
+    }
+
 }

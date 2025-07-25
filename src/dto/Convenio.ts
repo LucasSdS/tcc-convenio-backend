@@ -2,6 +2,59 @@ import Convenio from "../domain/Convenio";
 import { getTimestamp } from "../utils/DateUtils";
 import ConvenenteDTO from "./Convenente";
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ConvenioDTO:
+ *       type: object
+ *       properties:
+ *         detailUrl:
+ *           type: string
+ *           description: URL com detalhes do convênio
+ *         ifesCode:
+ *           type: string
+ *           description: Código SIAFI da IFES
+ *         number:
+ *           type: string
+ *           description: Número único do convênio
+ *         description:
+ *           type: string
+ *           description: Descrição do objeto do convênio
+ *         origin:
+ *           type: string
+ *           description: Origem/fonte do convênio
+ *         totalValueReleased:
+ *           type: number
+ *           description: Valor total já liberado
+ *         startEffectiveDate:
+ *           type: string
+ *           format: date
+ *           description: Data de início da vigência
+ *         endEffectiveDate:
+ *           type: string
+ *           format: date
+ *           description: Data de fim da vigência
+ *         lastReleaseDate:
+ *           type: string
+ *           format: date
+ *           description: Data da última liberação
+ *         valueLastRelease:
+ *           type: number
+ *           description: Valor da última liberação
+ *         totalValue:
+ *           type: number
+ *           description: Valor total do convênio
+ *         convenenteId:
+ *           type: integer
+ *           description: ID do convenente
+ *         convenente:
+ *           $ref: '#/components/schemas/ConvenenteDTO'
+ *         isPotentiallyTruncated:
+ *           type: boolean
+ *           description: Indica se o convênio pode ter valores truncados
+ */
+
 const dateKeys = ["startEffectiveDate", "endEffectiveDate", "lastReleaseDate"];
 
 const keys = [

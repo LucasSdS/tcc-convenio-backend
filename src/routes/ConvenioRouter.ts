@@ -78,7 +78,10 @@ router.get("/convenios/ranking", ConvenioController.rankingConvenios);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Convenio'
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/ConvenioDTO'
  *       404:
  *         description: Convênio não encontrado
  *       500:
@@ -198,69 +201,36 @@ router.get("/convenios/:conveniosNumber", ConvenioController.getConvenioByNumber
  *               properties:
  *                 data:
  *                   type: array
- *                   description: Lista de convênios
+ *                   description: Lista de convênios otimizada para UI
  *                   items:
- *                     type: object
- *                     properties:
- *                       detailUrl:
- *                         type: string
- *                         description: URL com detalhes do convênio
- *                       description:
- *                         type: string
- *                         description: Descrição do convênio
- *                       origin:
- *                         type: string
- *                         description: Origem do convênio
- *                       totalValueReleased:
- *                         type: number
- *                         description: Valor total liberado
- *                       totalValue:
- *                         type: number
- *                         description: Valor total do convênio
- *                       valueLastRelease:
- *                         type: number
- *                         description: Valor da última liberação
- *                       startEffectiveDate:
- *                         type: string
- *                         format: date
- *                         description: Data de início da vigência
- *                       endEffectiveDate:
- *                         type: string
- *                         format: date
- *                         description: Data do fim da vigência
- *                       destination:
- *                         type: string
- *                         description: Nome do convenente
- *                       destinationType:
- *                         type: string
- *                         description: Tipo do convenente
- *                       destinationDetailUrl:
- *                         type: string
- *                         description: URL com detalhes do convenente
- *                       acronym:
- *                         type: string
- *                         description: Sigla da universidade
+ *                     $ref: '#/components/schemas/ConvenioUI'
  *                 metadata:
  *                   type: object
  *                   properties:
  *                     totalCount:
  *                       type: integer
  *                       description: Total de registros
+ *                       example: 3628
  *                     limit:
  *                       type: integer
  *                       description: Limite por página
+ *                       example: 10
  *                     currentPage:
  *                       type: integer
  *                       description: Página atual
+ *                       example: 1
  *                     totalPages:
  *                       type: integer
  *                       description: Total de páginas
+ *                       example: 363
  *                     sortBy:
  *                       type: string
  *                       description: Campo de ordenação
+ *                       example: "lastReleaseDate"
  *                     sortOrder:
  *                       type: string
  *                       description: Ordem de classificação
+ *                       example: "DESC"
  *       400:
  *         description: Parâmetros inválidos
  *       404:
