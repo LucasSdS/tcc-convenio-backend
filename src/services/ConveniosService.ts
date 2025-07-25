@@ -4,6 +4,7 @@ import ConveniosRepository from "../repositories/ConveniosRepository";
 import IfesRankingDTO from "../dto/IfesRanking";
 import ConvenentesRankingDTO from "../dto/ConvenentesRanking";
 import NotFoundError from "../errors/NotFoundError";
+import BadRequestError from "../errors/BadRequestError";
 
 export default class ConveniosService {
     static async getAllConvenios(options?: {
@@ -115,6 +116,10 @@ export default class ConveniosService {
         const startYear = buildDateOnly(queryParams.startYear);
         const endYear = buildDateOnly(queryParams.endYear);
         const limit = queryParams.limit;
+
+        if(startYear > endYear){
+            throw new BadRequestError("O ano de início não pode ser maior que o ano de fim");
+        }
 
         const [ifesRankingRaw, convenentesRankingRaw] = await Promise.all([
             ConveniosRepository.getIfesRankingOptimizedRaw(startYear, endYear, limit),

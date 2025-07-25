@@ -537,7 +537,7 @@ export default class ConveniosRepository {
                 `Erro ao buscar ranking convenentes com SQL raw. Erro: ${error.message}`,
                 "ConveniosRepositoryLog"
             );
-            throw new InternalServerError("Erro ao buscar ranking convenentes com SQL raw. Tente novamente mais tarde");
+            throw new InternalServerError("Erro ao buscar ranking convenentes. Tente novamente mais tarde");
         }
     }
 
@@ -577,7 +577,7 @@ export default class ConveniosRepository {
                 `Erro ao buscar convenentes por IFES com SQL raw. Erro: ${error.message}`,
                 "ConveniosRepositoryLog"
             );
-            throw new InternalServerError("Erro ao buscar convenentes por IFES com SQL raw. Tente novamente mais tarde");
+            throw new InternalServerError("Erro ao buscar convenentes por IFES. Tente novamente mais tarde");
         }
     }
 
