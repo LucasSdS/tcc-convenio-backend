@@ -1,20 +1,103 @@
 import RankingConveniosValidations from "../validations/RankingConveniosValidations";
 import { buildDateOnly } from "../utils/DateUtils";
-import IfesService from "./IfesService";
 import ConveniosRepository from "../repositories/ConveniosRepository";
 import IfesRankingDTO from "../dto/IfesRanking";
 import ConvenentesRankingDTO from "../dto/ConvenentesRanking";
-import ConvenentesService from "./ConvenentesService";
 import NotFoundError from "../errors/NotFoundError";
+import BadRequestError from "../errors/BadRequestError";
 
 export default class ConveniosService {
+    static async getAllConvenios(options?: {
+        page?: number;
+        limit?: number;
+        sortBy?: string;
+        sortOrder?: 'ASC' | 'DESC';
+        filters?: Record<string, any>;
+        all?: boolean;
+    }) {
+        const {
+            page = 1,
+            limit = 10,
+            sortBy = 'lastReleaseDate',
+            sortOrder = 'DESC',
+            filters = {},
+            all = false
+        } = options || {};
 
-    static async getAllConvenios() {
-        const convenios = await ConveniosRepository.getAll();
-        if (!convenios) {
-            throw new NotFoundError("Convenios não encontrados, tente novamente mais tarde", "Não foi encontrado nenhum convênio");
+        const validFilters: Record<string, any> = {};
+        const allowedFilterFields = [
+            'description', 'origin', 'startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 
+            'totalValueReleased', 'valueLastRelease', 'totalValue',
+            'ifesAcronym', 'convenenteType'
+        ];
+        
+        Object.keys(filters).forEach(key => {
+            if (allowedFilterFields.includes(key) && filters[key] && filters[key] !== '') {
+                validFilters[key] = filters[key];
+            }
+        });
+
+        const sortableFields = [
+            'startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 
+            'totalValueReleased', 'valueLastRelease', 'totalValue', 'createdAt'
+        ];
+        const validSortBy = sortableFields.includes(sortBy) ? sortBy : 'lastReleaseDate';
+        const validSortOrder = (sortOrder === 'ASC' || sortOrder === 'DESC') ? sortOrder : 'DESC';
+
+        let result;
+
+        if (all) {
+            const repositoryOptions = {
+                sortBy: validSortBy,
+                sortOrder: validSortOrder,
+                filters: validFilters
+            };
+
+            const convenios = await ConveniosRepository.getAll(repositoryOptions);
+            if (!convenios || convenios.length === 0) {
+                throw new NotFoundError("Convenios não encontrados, tente novamente mais tarde", "Não foi encontrado nenhum convênio");
+            }
+
+            result = {
+                data: convenios,
+                metadata: {
+                    totalCount: convenios.length,
+                    limit: convenios.length,
+                    currentPage: 1,
+                    totalPages: 1,
+                    sortBy: validSortBy,
+                    sortOrder: validSortOrder,
+                }
+            };
+        } else {
+            const repositoryOptions = {
+                page,
+                limit,
+                sortBy: validSortBy,
+                sortOrder: validSortOrder,
+                filters: validFilters,
+                all: false
+            };
+
+            const repositoryResult = await ConveniosRepository.getAllWithPagination(repositoryOptions);
+            if (!repositoryResult.data || repositoryResult.data.length === 0) {
+                throw new NotFoundError("Convenios não encontrados, tente novamente mais tarde", "Não foi encontrado nenhum convênio");
+            }
+
+            result = {
+                data: repositoryResult.data,
+                metadata: {
+                    totalCount: repositoryResult.totalCount,
+                    limit: repositoryResult.limit,
+                    currentPage: repositoryResult.currentPage,
+                    totalPages: repositoryResult.totalPages,
+                    sortBy: repositoryResult.sortBy,
+                    sortOrder: repositoryResult.sortOrder,
+                }
+            };
         }
-        return convenios;
+
+        return result;
     }
 
     static async getConveniosByNumber(number: string) {
@@ -34,24 +117,63 @@ export default class ConveniosService {
         const endYear = buildDateOnly(queryParams.endYear);
         const limit = queryParams.limit;
 
-        const ifesRankingPartial = await ConveniosService.getIfesCodeAndTotalValueReleasedFromConvenios(startYear, endYear, limit);
-        const ifesRankingDTO = await IfesService.getIfesRanking(ifesRankingPartial, startYear, endYear);
+        if(startYear > endYear){
+            throw new BadRequestError("O ano de início não pode ser maior que o ano de fim");
+        }
 
-        const convenentesRankingPartial = await ConveniosService.getConvenentesAndTotalValueReleasedFromConvenios(startYear, endYear, limit);
-        const convenentesRankingDTO = await ConvenentesService.getConvenentesRanking(convenentesRankingPartial, startYear, endYear);
+        const [ifesRankingRaw, convenentesRankingRaw] = await Promise.all([
+            ConveniosRepository.getIfesRankingOptimizedRaw(startYear, endYear, limit),
+            ConveniosRepository.getConvenentesRankingOptimizedRaw(startYear, endYear, limit)
+        ]);
+
+        const ifesCodes = ifesRankingRaw.map((ifes: any) => ifes.ifesCode);
+        const convenentesByIfes = await ConveniosRepository.getConvenentesByIfesRankingRaw(ifesCodes, startYear, endYear);
+
+        const ifesRankingDTO = ifesRankingRaw.map((ifes: any) => {
+            const convenentesDestaIfes = convenentesByIfes
+                .filter((conv: any) => conv.ifesCode === ifes.ifesCode)
+                .map((conv: any) => ({
+                    name: conv.convenenteName,
+                    detailUrl: conv.convenenteDetailUrl,
+                    totalValueReleased: Number(conv.totalValueReleased)
+                }))
+                .sort((a: any, b: any) => b.totalValueReleased - a.totalValueReleased);
+
+            return new IfesRankingDTO({
+                code: ifes.ifesCode,
+                name: ifes.ifesName,
+                totalValueReleased: Number(ifes.totalValueReleased),
+                convenentes: convenentesDestaIfes
+            });
+        });
+
+        const convenentesRankingDTO = convenentesRankingRaw.map((convenente: any) => {
+            return new ConvenentesRankingDTO({
+                convenenteId: convenente.convenenteId,
+                name: convenente.convenenteName,
+                totalValueReleased: Number(convenente.totalValueReleased),
+                detailUrl: convenente.convenenteDetailUrl,
+                ifes: {
+                    code: convenente.ifesCode,
+                    name: convenente.ifesName
+                }
+            });
+        });
 
         return { ifesRankingDTO, convenentesRankingDTO };
     }
 
-    static async getIfesCodeAndTotalValueReleasedFromConvenios(startYear: Date, endYear: Date, limit: number) {
-        return IfesRankingDTO.fromPartialIfesRankingEntities(
-            await ConveniosRepository.getIfesCodeAndTotalValueReleasedFromConvenios(startYear, endYear, limit)
-        );
-    }
+    static async getDashboardStats() {
+        const [totalConvenios, totalConveniosActive, lastUpdatedDate] = await Promise.all([
+            ConveniosRepository.getTotalConvenios(),
+            ConveniosRepository.getTotalConveniosActive(),
+            ConveniosRepository.getLatestUpdatedConveniosDate()
+        ])
 
-    static async getConvenentesAndTotalValueReleasedFromConvenios(startYear: Date, endYear: Date, limit: number) {
-        return ConvenentesRankingDTO.fromPartialConvenentesRankingEntities(
-            await ConveniosRepository.getConvenentesAndTotalValueReleasedFromConvenios(startYear, endYear, limit)
-        );
+        return {
+            totalConvenios,
+            totalConveniosActive,
+            lastUpdatedDate
+        }
     }
 }

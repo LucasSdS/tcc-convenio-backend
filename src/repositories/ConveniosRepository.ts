@@ -1,15 +1,74 @@
 import ConvenioDTO from "../dto/Convenio";
 import Convenente from "../domain/Convenente";
 import Convenio from "../domain/Convenio";
-import { col, fn, Op, Transaction } from "sequelize";
+import { col, fn, literal, Op, QueryTypes, Transaction } from "sequelize";
 import ConvenioHistoryRepository from "./ConvenioHistoryRepository";
 import Ifes from "../domain/Ifes";
 import InternalServerError from "../errors/InternalServerError";
 import NotFoundError from "../errors/NotFoundError";
 import { logger } from "../utils/ContextLogger";
+import ConvenioUIDTO from "../dto/ConvenioUIDTO";
+import sequelize from "../config/postgresqlConfig";
 
 export default class ConveniosRepository {
     private static conveniosRepositoryLogger = logger.createContextLogger("ConveniosRepositoryLog");
+
+    static async getLatestUpdatedConveniosDate() {
+        try {
+            const query = `
+                SELECT MAX("updatedAt") as "latestUpdate"
+                FROM "Convenios"
+                WHERE "updatedAt" IS NOT NULL;
+            `;
+            
+            const result = await sequelize.query(query, {
+                type: QueryTypes.SELECT,
+                raw: true
+            }) as [{ latestUpdate: Date | null }];
+            
+            return result[0]?.latestUpdate || null;
+        } catch(error: any){
+            console.error("Erro ao tentar buscar a data do último convênio atualizado", error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar buscar a data do último convênio atualizado. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
+            throw new InternalServerError("Erro ao tentar buscar a data do último convênio atualizado");
+        }
+    }
+
+    static async getTotalConvenios(){
+        try {
+            return await Convenio.count();
+        } catch(error: any) {
+            console.error("Erro ao tentar buscar o total de convênios", error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar buscar o total de convênios. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
+            throw new InternalServerError("Erro ao tentar buscar o total de convênios");
+        }
+    }
+
+    static async getTotalConveniosActive(){
+        try {
+            const currentDate = new Date();
+            return await Convenio.count({
+                where: {
+                    startEffectiveDate: { [Op.lte]: currentDate },
+                    endEffectiveDate: { [Op.gte]: currentDate }
+                }
+            });
+
+        } catch(error: any){
+            console.error("Erro ao tentar buscar o total de convênios ativos", error.name, error.message);
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar buscar o total de convênios ativos. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
+            throw new InternalServerError("Erro ao tentar buscar o total de convênios ativos");
+        }
+    }
 
     static async getConvenioByNumber(conveniosNumber: string): Promise<any> {
         try {
@@ -154,23 +213,80 @@ export default class ConveniosRepository {
         }
     }
 
-    static async getAll() {
+    static async getAll(options?: {
+        sortBy?: string;
+        sortOrder?: 'ASC' | 'DESC';
+        filters?: Record<string, any>;
+    }) {
         try {
-            return await Convenio.findAll(
+            const {
+                sortBy = 'lastReleaseDate',
+                sortOrder = 'DESC',
+                filters = {}
+            } = options || {};
+
+            const whereConditions: any = {};
+            const includeConditions: any = [
                 {
-                    order: [['lastReleaseDate', 'DESC']],
-                    include: [
-                        {
-                            model: Convenente,
-                            as: "convenente"
-                        },
-                        {
-                            model: Ifes,
-                            as: "ifes"
-                        }
-                    ],
+                    model: Convenente,
+                    as: "convenente",
+                    where: {}
+                },
+                {
+                    model: Ifes,
+                    as: "ifes",
+                    where: {}
                 }
-            );
+            ];
+            
+            const textFields = ['description', 'origin'];
+            const dateAndValueFields = ['startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 'totalValueReleased', 'valueLastRelease', 'totalValue'];
+            
+            let hasIfesFilter = false;
+            let hasConvenenteFilter = false;
+
+            Object.keys(filters).forEach(key => {
+                if (filters[key] && filters[key] !== '') {
+                    if (textFields.includes(key)) {
+                        whereConditions[key] = {
+                            [Op.iLike]: `%${filters[key]}%`
+                        };
+                    } else if (dateAndValueFields.includes(key)) {
+                        whereConditions[key] = filters[key];
+                    } else if (key === 'ifesAcronym') {
+                        includeConditions[1].where = {
+                            acronym: {
+                                [Op.iLike]: `%${filters[key]}%`
+                            }
+                        };
+                        hasIfesFilter = true;
+                    } else if (key === 'convenenteType') {
+                        includeConditions[0].where = {
+                            type: {
+                                [Op.iLike]: `%${filters[key]}%`
+                            }
+                        };
+                        hasConvenenteFilter = true;
+                    }
+                }
+            });
+
+            if (!hasIfesFilter) {
+                delete includeConditions[1].where;
+            }
+            if (!hasConvenenteFilter) {
+                delete includeConditions[0].where;
+            }
+
+            const validSortBy = ['startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 'totalValueReleased', 'valueLastRelease', 'totalValue', 'createdAt'].includes(sortBy) ? sortBy : 'lastReleaseDate';
+
+            const convenioEntities = await Convenio.findAll({
+                where: whereConditions,
+                order: [[validSortBy, sortOrder]],
+                include: includeConditions
+            });
+
+            return ConvenioUIDTO.fromEntities(convenioEntities);
         } catch (error: any) {
             console.log("Ocorreu um erro ao buscar todos os convenios");
             this.conveniosRepositoryLogger.error(
@@ -181,22 +297,126 @@ export default class ConveniosRepository {
         }
     }
 
+    static async getAllWithPagination(options: {
+        page?: number;
+        limit?: number;
+        sortBy?: string;
+        sortOrder?: 'ASC' | 'DESC';
+        filters?: Record<string, any>;
+        all?: boolean;
+    }) {
+        try {
+            const {
+                page = 1,
+                limit = 10,
+                sortBy = 'lastReleaseDate',
+                sortOrder = 'DESC',
+                filters = {},
+                all = false
+            } = options;
+
+            const whereConditions: any = {};
+            const includeConditions: any = [
+                {
+                    model: Convenente,
+                    as: "convenente",
+                    where: {}
+                },
+                {
+                    model: Ifes,
+                    as: "ifes",
+                    where: {}
+                }
+            ];
+            
+            const textFields = ['description', 'origin'];
+            const dateAndValueFields = ['startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 'totalValueReleased', 'valueLastRelease', 'totalValue'];
+            
+            let hasIfesFilter = false;
+            let hasConvenenteFilter = false;
+
+            Object.keys(filters).forEach(key => {
+                if (filters[key] && filters[key] !== '') {
+                    if (textFields.includes(key)) {
+                        whereConditions[key] = {
+                            [Op.iLike]: `%${filters[key]}%`
+                        };
+                    } else if (dateAndValueFields.includes(key)) {
+                        whereConditions[key] = filters[key];
+                    } else if (key === 'ifesAcronym') {
+                        includeConditions[1].where = {
+                            acronym: {
+                                [Op.iLike]: `%${filters[key]}%`
+                            }
+                        };
+                        hasIfesFilter = true;
+                    } else if (key === 'convenenteType') {
+                        includeConditions[0].where = {
+                            type: {
+                                [Op.iLike]: `%${filters[key]}%`
+                            }
+                        };
+                        hasConvenenteFilter = true;
+                    }
+                }
+            });
+
+            if (!hasIfesFilter) {
+                delete includeConditions[1].where;
+            }
+            if (!hasConvenenteFilter) {
+                delete includeConditions[0].where;
+            }
+
+            const validSortBy = ['startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 'totalValueReleased', 'valueLastRelease', 'totalValue', 'createdAt'].includes(sortBy) ? sortBy : 'lastReleaseDate';
+
+            const queryOptions: any = {
+                where: whereConditions,
+                order: [[validSortBy, sortOrder]],
+                include: includeConditions
+            };
+
+            if (!all) {
+                queryOptions.offset = (page - 1) * limit;
+                queryOptions.limit = limit;
+            }
+
+            const { count, rows } = await Convenio.findAndCountAll(queryOptions);
+            const conveniosUIDTO = ConvenioUIDTO.fromEntities(rows);
+            
+            return {
+                data: conveniosUIDTO,
+                totalCount: count,
+                currentPage: page,
+                totalPages: all ? 1 : Math.ceil(count / limit),
+                limit: all ? count : limit,
+                sortBy: validSortBy,
+                sortOrder: sortOrder
+            };
+        } catch (error: any) {
+            console.log("Ocorreu um erro ao buscar convenios com paginação");
+            this.conveniosRepositoryLogger.error(
+                `Erro ao tentar buscar convenios com paginação. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
+            throw new InternalServerError("Erro ao tentar buscar convenios com paginação. Tente novamente mais tarde");
+        }
+    }
+
     /**
      * Método responsável por realizar a consulta de todos os convenios de uma universidade, 
-     * buscando os convenios que tiveram ultimos valores liberados no período informado.
-     * Problemas da consulta acima: Pode não trazer valores que foram liberados anteriormente dentro do mesmo período
-     * Exemplo: Uma faculdade tem um convenio com contrato de inicio de 2020 até 2025 no valor total de 3 milhões
-     * No ano de 2021 a universidade repassa 500 mil, no ano de 2022 repassa 1 milhão, no ano de 2023 repassa 750 mil
-     * Se o usuario colocar o periodo de comparação de 2020 até 2021 a consulta abaixo não irá encontrar o convenio acima,
-     * pois a ultima data de liberação foi no ano de 2023. 
+     * buscando os convenios que tiveram interação no período informado.
      * 
-     * Método mais generalista pegando os convênios que:
-     *  iniciaram dentro do período informado
-     *  último dia de liberação dentro do período informado
-     *  finalizaram dentro do período informado ou após período informado 
+     * Solução híbrida que combina:
+     * - Período de vigência do convênio
+     * - Garantia de valores liberados (elimina ruído)
+     * - Interação real no período (última liberação, início ou fim no período)
      * 
-     * filtrando o campo lastReleaseDate em um período
-     * e ordenando pelo valueLastRelease de forma decrescente
+     * Exemplo: Uma faculdade tem um convenio de 2020-2025 com R$ 3 milhões
+     * - 2021: Liberou R$ 500k, 2022: R$ 1M, 2023: R$ 750k
+     * - Consulta 2020-2021:  Vai aparecer (início em 2020 + tem valores)
+     * - Consulta 2024-2025:  Vai aparecer (termina em 2025 + tem valores)
+     * 
      * @param ifesCode 
      * @param dataInicio 
      * @param dataFim 
@@ -210,7 +430,12 @@ export default class ConveniosRepository {
                         ifesCode: ifesCode,
                         startEffectiveDate: { [Op.lte]: dataFim },
                         endEffectiveDate: { [Op.gte]: dataInicio },
-                        lastReleaseDate: { [Op.between]: [dataInicio, dataFim] }
+                        totalValueReleased: { [Op.gt]: 0 },
+                        [Op.or]: [
+                            { lastReleaseDate: { [Op.between]: [dataInicio, dataFim] } },
+                            { startEffectiveDate: { [Op.between]: [dataInicio, dataFim] } },
+                            { endEffectiveDate: { [Op.between]: [dataInicio, dataFim] } }
+                        ]
                     },
                     order: [['totalValueReleased', 'DESC']],
                     include: {
@@ -230,60 +455,130 @@ export default class ConveniosRepository {
         }
     }
 
-    static async getIfesCodeAndTotalValueReleasedFromConvenios(startYear: Date, endYear: Date, limit: number): Promise<any> {
+    static async getIfesRankingOptimizedRaw(startYear: Date, endYear: Date, limit: number): Promise<any> {
         try {
-            return await Convenio.findAll({
-                attributes: [
-                    ['ifesCode', 'code'],
-                    [fn('COALESCE', fn('SUM', col('totalValueReleased')), 0), 'totalValueReleased'],
-                ],
-                where: {
-                    startEffectiveDate: { [Op.lte]: endYear },
-                    endEffectiveDate: { [Op.gte]: startYear },
-                    lastReleaseDate: { [Op.between]: [startYear, endYear] }
-                },
-                group: ['ifesCode'],
-                order: [[col('totalValueReleased'), 'DESC']],
-                limit: limit,
-                raw: true,
-            });
+            const query = `
+                SELECT 
+                    i.code as "ifesCode",
+                    i.name as "ifesName",
+                    COALESCE(SUM(c."totalValueReleased"), 0) as "totalValueReleased"
+                FROM "Convenios" c
+                INNER JOIN "Ifes" i ON i.code = c."ifesCode"
+                WHERE c."startEffectiveDate" <= :endYear
+                  AND c."endEffectiveDate" >= :startYear
+                  AND c."totalValueReleased" > 0
+                  AND (
+                    c."lastReleaseDate" BETWEEN :startYear AND :endYear 
+                    OR c."startEffectiveDate" BETWEEN :startYear AND :endYear
+                    OR c."endEffectiveDate" BETWEEN :startYear AND :endYear
+                  )
+                GROUP BY i.code, i.name
+                HAVING SUM(c."totalValueReleased") > 0
+                ORDER BY SUM(c."totalValueReleased") DESC
+                LIMIT :limit;
+            `;
 
+            return await sequelize.query(query, {
+                replacements: {
+                    startYear: startYear,
+                    endYear: endYear,
+                    limit: limit
+                },
+                type: QueryTypes.SELECT
+            });
         } catch (error: any) {
-            console.log("Erro ao tentar obter somatorio de valores totais repassados de todos os os convênios agrupados por ifesCode");
+            console.log("Erro ao buscar ranking IFES com SQL raw");
             this.conveniosRepositoryLogger.error(
-                `Erro ao tentar obter somatorio de valores totais repassados de todos os os convênios agrupados por ifesCode. Erro: ${error.message}`,
+                `Erro ao buscar ranking IFES com SQL raw. Erro: ${error.message}`,
                 "ConveniosRepositoryLog"
             );
-            throw new InternalServerError("Erro ao tentar obter somatorio de valores totais repassados de todos os os convênios agrupados por ifesCode. Tente novamente mais tarde");
+            throw new InternalServerError("Erro ao buscar ranking IFES com SQL raw. Tente novamente mais tarde");
         }
     }
 
-    static async getConvenentesAndTotalValueReleasedFromConvenios(startYear: Date, endYear: Date, limit: number): Promise<any> {
+    static async getConvenentesRankingOptimizedRaw(startYear: Date, endYear: Date, limit: number): Promise<any> {
         try {
-            return await Convenio.findAll({
-                attributes: [
-                    'convenenteId',
-                    [fn('SUM', col('totalValueReleased')), 'totalValueReleased'],
-                    ['ifesCode', 'ifes']
-                ],
-                where: {
-                    startEffectiveDate: { [Op.lte]: endYear },
-                    endEffectiveDate: { [Op.gte]: startYear },
-                    lastReleaseDate: { [Op.between]: [startYear, endYear] }
-                },
-                group: ['convenenteId', 'ifesCode'],
-                order: [[col('totalValueReleased'), 'DESC']],
-                limit: limit,
-                raw: true
-            });
+            const query = `
+                SELECT 
+                    conv.id as "convenenteId",
+                    conv.name as "convenenteName", 
+                    conv."detailUrl" as "convenenteDetailUrl",
+                    i.code as "ifesCode",
+                    i.name as "ifesName",
+                    SUM(c."totalValueReleased") as "totalValueReleased"
+                FROM "Convenios" c
+                INNER JOIN "Convenentes" conv ON conv.id = c."convenenteId"
+                INNER JOIN "Ifes" i ON i.code = c."ifesCode"
+                WHERE c."startEffectiveDate" <= :endYear
+                  AND c."endEffectiveDate" >= :startYear
+                  AND c."totalValueReleased" > 0
+                  AND (
+                    c."lastReleaseDate" BETWEEN :startYear AND :endYear 
+                    OR c."startEffectiveDate" BETWEEN :startYear AND :endYear
+                    OR c."endEffectiveDate" BETWEEN :startYear AND :endYear
+                  )
+                GROUP BY conv.id, conv.name, conv."detailUrl", i.code, i.name
+                HAVING SUM(c."totalValueReleased") > 0
+                ORDER BY SUM(c."totalValueReleased") DESC
+                LIMIT :limit;
+            `;
 
+            return await sequelize.query(query, {
+                replacements: {
+                    startYear: startYear,
+                    endYear: endYear,
+                    limit: limit
+                },
+                type: QueryTypes.SELECT
+            });
         } catch (error: any) {
-            console.log("Erro ao tentar obter o somatorio de valores totais repassados de todos os convenios agrupados por convenentes");
+            console.log("Erro ao buscar ranking convenentes com SQL raw");
             this.conveniosRepositoryLogger.error(
-                `Erro ao tentar obter o somatorio de valores totais repassados de todos os convenios agrupados por convenentes. Erro: ${error.message}`,
+                `Erro ao buscar ranking convenentes com SQL raw. Erro: ${error.message}`,
                 "ConveniosRepositoryLog"
             );
-            throw new InternalServerError("Erro ao tentar obter o somatorio de valores totais repassados de todos os convenios agrupados por convenentes. Tente novamente mais tarde");
+            throw new InternalServerError("Erro ao buscar ranking convenentes. Tente novamente mais tarde");
         }
     }
+
+    static async getConvenentesByIfesRankingRaw(ifesCodes: string[], startYear: Date, endYear: Date): Promise<any> {
+        try {
+            const placeholders = ifesCodes.map((_, index) => `$${index + 1}`).join(', ');
+            const query = `
+                SELECT 
+                    i.code as "ifesCode",
+                    conv.name as "convenenteName",
+                    conv."detailUrl" as "convenenteDetailUrl",
+                    SUM(c."totalValueReleased") as "totalValueReleased"
+                FROM "Convenios" c
+                INNER JOIN "Convenentes" conv ON conv.id = c."convenenteId"
+                INNER JOIN "Ifes" i ON i.code = c."ifesCode"
+                WHERE i.code IN (${placeholders})
+                  AND c."startEffectiveDate" <= $${ifesCodes.length + 2}
+                  AND c."endEffectiveDate" >= $${ifesCodes.length + 1}
+                  AND c."totalValueReleased" > 0
+                  AND (
+                    c."lastReleaseDate" BETWEEN $${ifesCodes.length + 1} AND $${ifesCodes.length + 2}
+                    OR c."startEffectiveDate" BETWEEN $${ifesCodes.length + 1} AND $${ifesCodes.length + 2}
+                    OR c."endEffectiveDate" BETWEEN $${ifesCodes.length + 1} AND $${ifesCodes.length + 2}
+                  )
+                GROUP BY i.code, conv.name, conv."detailUrl"
+                HAVING SUM(c."totalValueReleased") > 0
+                ORDER BY i.code ASC, SUM(c."totalValueReleased") DESC;
+            `;
+
+            return await sequelize.query(query, {
+                bind: [...ifesCodes, startYear, endYear],
+                type: QueryTypes.SELECT
+            });
+        } catch (error: any) {
+            console.log("Erro ao buscar convenentes por IFES com SQL raw");
+            this.conveniosRepositoryLogger.error(
+                `Erro ao buscar convenentes por IFES com SQL raw. Erro: ${error.message}`,
+                "ConveniosRepositoryLog"
+            );
+            throw new InternalServerError("Erro ao buscar convenentes por IFES. Tente novamente mais tarde");
+        }
+    }
+
 }

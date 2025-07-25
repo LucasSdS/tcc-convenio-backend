@@ -6,7 +6,7 @@ const options: swaggerJsdoc.Options = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'Portal de Convênios API',
+            title: 'Portal Convênios API',
             version: '1.0.0',
             description: 'API para gerenciamento de convênios entre universidades federais',
             contact: {

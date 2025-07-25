@@ -17,4 +17,17 @@ export default class ConvenioHistoryRepository {
         }
     }
 
+    static async getLastUpdatedDate() {
+        try {
+            const lastUpdated = await ConvenioHistory.findOne({
+                order: [['updatedAt', 'DESC']],
+                attributes: ['updatedAt']
+            });
+            return lastUpdated ? lastUpdated.updatedAt : null;
+        } catch (error: any) {
+            console.log(error.name, error.message);
+            throw new InternalServerError("Erro ao tentar buscar a data da última atualização dos convênios");
+        }
+    }
+
 }

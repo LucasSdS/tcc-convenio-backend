@@ -6,14 +6,42 @@ import { Op } from "sequelize";
 import Convenio from "../domain/Convenio";
 import Ifes from "../domain/Ifes";
 import InternalServerError from "../errors/InternalServerError";
+import { logger } from "../utils/ContextLogger";
 
 export default class ConvenenteRepository {
+    private static convenenteRepositoryLogger = logger.createContextLogger("ConvenenteRepositoryLog");
+
+    static async getTotalConvenentes(){
+        try {  
+            return await Convenente.count();
+        } catch(error: any){
+            console.log(error.name, error.message);
+            this.convenenteRepositoryLogger.error("Erro ao buscar total de convenentes", error);
+            throw new InternalServerError("Erro ao tentar buscar total de convenentes. Tente novamente mais tarde");
+        }
+    }
+
+    static async getConvenenteTypes() {
+    try {
+        return await Convenente.findAll({
+            attributes: ['type'],
+            group: ['type'],
+            order: [['type', 'ASC']],
+            raw: true 
+        });
+    } catch (error: any) {
+        console.log(error.name, error.message);
+        this.convenenteRepositoryLogger.error("Erro ao buscar tipos de convenentes", error);
+        throw new InternalServerError("Erro ao tentar buscar tipos de convenentes. Tente novamente mais tarde");
+    }
+}
 
     static async getById(id: number) {
         try {
             return await Convenente.findByPk(id);
         } catch (error: any) {
             console.log(error.name, error.message);
+            this.convenenteRepositoryLogger.error(`Erro ao buscar convenente pelo id: ${id}`, error);
             throw new InternalServerError("Erro ao tentar buscar convenente pelo id. Tente novamente mais tarde");
         }
     }
@@ -23,6 +51,7 @@ export default class ConvenenteRepository {
             return await Convenente.findAll();
         } catch (error: any) {
             console.log(error.name, error.message);
+            this.convenenteRepositoryLogger.error("Erro ao buscar todos os convenentes", error);
             throw new InternalServerError("Erro ao tentar buscar todos os convenentes. Tente novamente mais tarde");
         }
     }
@@ -39,6 +68,7 @@ export default class ConvenenteRepository {
         } catch (error: any) {
             transaction.rollback();
             console.log(error.name, error.message);
+            this.convenenteRepositoryLogger.error(`Erro ao buscar convenentes com url: ${convenenteUrls}`, error);
             throw new InternalServerError(`Erro ao tentar buscar todos os convenentes com url: ${convenenteUrls}`);
         }
     }
@@ -61,6 +91,7 @@ export default class ConvenenteRepository {
         } catch (error: any) {
             console.log("[DB_CONVENENTES][CONVENENTES_REPOSITORY] Erro ao criar/buscar Convenente", convenente.name);
             console.log(error.name, error.message);
+            this.convenenteRepositoryLogger.error(`Erro ao criar convenente: ${convenente.name}`, error);
             throw new InternalServerError(`Erro ao tentar criar o convenente ${convenente.name}`);
         }
     }
@@ -88,6 +119,7 @@ export default class ConvenenteRepository {
 
         } catch (error: any) {
             console.error("Erro ao buscar Ifes com mais repasses realizados:", error);
+            this.convenenteRepositoryLogger.error("Erro ao buscar Ifes com mais repasses realizados", error);
             throw new InternalServerError("Erro ao tentar buscar Ifes com mais repasses realizados. Tente novamente mais tarde");
         }
     }

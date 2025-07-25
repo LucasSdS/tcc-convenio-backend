@@ -11,20 +11,17 @@ import ConvenioDTO from "../dto/Convenio";
  *         nome:
  *           type: string
  *           description: Nome da Ifes
- *           example: "Universidade Federal de Minas Gerais"
  *         qtdConvenios:
  *           type: integer
  *           description: Quantidade de convênios
- *           example: 42
  *         valorTotalLiberado:
  *           type: number
  *           description: Valor total liberado
- *           example: 15650000.75
  *         listaConvenios:
  *           type: array
  *           description: Lista de convênios associados à Ifes
  *           items:
- *             $ref: '#/components/schemas/Convenio'
+ *             $ref: '#/components/schemas/ConvenioDTO'
  *       required:
  *         - nome
  */

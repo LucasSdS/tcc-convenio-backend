@@ -37,13 +37,11 @@ export default class PortalConveniosService {
                 response = await PortalAPI.getConveniosByYear(ifesCode, currYear.toString(), page);
                 resDTO.push(response)
             }
-            // if (!response.length && page === 1) cycleYear = false
             if (currYear < 2000) cycleYear = false
-            // if (currYear < 2024) cycleYear = false
             currYear--;
         }
 
-        this.conveniosServiceLogger.info(`Encontrados ${resDTO.length} convênios para instituição ${ifesCode} \nResposta: ${resDTO}`, "ConveniosServiceLog");
+        this.conveniosServiceLogger.info(`Encontrados ${resDTO.length} convênios para instituição ${ifesCode} \nResposta: ${JSON.stringify(resDTO)}`, "ConveniosServiceLog");
         return resDTO.flat();
     }
 
