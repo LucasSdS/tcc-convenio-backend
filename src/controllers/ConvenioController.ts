@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import ConveniosService from "../services/ConveniosService";
 import HandleErrors from "../errors/HandleErrors";
+import UrlUtils from "../utils/UrlUtils";
 
 export default class ConvenioController {
     static async getConvenioByNumber(req: Request, res: Response, next: NextFunction) {
@@ -39,12 +40,15 @@ export default class ConvenioController {
             const limitNumber = parseInt(limit as string);
             const allBoolean = (all as string) === 'true';
             
+            const decodedFilters = UrlUtils.decodeQueryParams(filters);
+            const cleanFilters = UrlUtils.sanitizeFilters(decodedFilters);
+            
             const options = {
                 page: pageNumber,
                 limit: limitNumber,
                 sortBy: sortBy as string,
                 sortOrder: (sortOrder as string).toUpperCase() as 'ASC' | 'DESC',
-                filters,
+                filters: cleanFilters,
                 all: allBoolean
             };
 

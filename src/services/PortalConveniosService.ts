@@ -37,7 +37,7 @@ export default class PortalConveniosService {
                 response = await PortalAPI.getConveniosByYear(ifesCode, currYear.toString(), page);
                 resDTO.push(response)
             }
-            if (currYear < 2000) cycleYear = false
+            if (currYear < 1996) cycleYear = false
             currYear--;
         }
 
