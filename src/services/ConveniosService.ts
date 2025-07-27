@@ -28,7 +28,7 @@ export default class ConveniosService {
         const allowedFilterFields = [
             'description', 'origin', 'startEffectiveDate', 'endEffectiveDate', 'lastReleaseDate', 
             'totalValueReleased', 'valueLastRelease', 'totalValue',
-            'ifesAcronym', 'convenenteType'
+            'ifesAcronym', 'convenenteType', 'destination'
         ];
         
         Object.keys(filters).forEach(key => {

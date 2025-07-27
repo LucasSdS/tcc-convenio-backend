@@ -262,7 +262,16 @@ export default class ConveniosRepository {
                         hasIfesFilter = true;
                     } else if (key === 'convenenteType') {
                         includeConditions[0].where = {
+                            ...includeConditions[0].where,
                             type: {
+                                [Op.iLike]: `%${filters[key]}%`
+                            }
+                        };
+                        hasConvenenteFilter = true;
+                    } else if (key === 'destination') {
+                        includeConditions[0].where = {
+                            ...includeConditions[0].where,
+                            name: {
                                 [Op.iLike]: `%${filters[key]}%`
                             }
                         };
@@ -352,7 +361,16 @@ export default class ConveniosRepository {
                         hasIfesFilter = true;
                     } else if (key === 'convenenteType') {
                         includeConditions[0].where = {
+                            ...includeConditions[0].where,
                             type: {
+                                [Op.iLike]: `%${filters[key]}%`
+                            }
+                        };
+                        hasConvenenteFilter = true;
+                    } else if (key === 'destination') {
+                        includeConditions[0].where = {
+                            ...includeConditions[0].where,
+                            name: {
                                 [Op.iLike]: `%${filters[key]}%`
                             }
                         };
